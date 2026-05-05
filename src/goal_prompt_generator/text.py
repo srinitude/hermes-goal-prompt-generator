@@ -27,8 +27,7 @@ def classify_domain(prompt: str) -> tuple[str, str]:
 
 
 def make_title(prompt: str) -> str:
-    cleaned = re.sub(r"^/goal\s+", "", prompt.strip(), flags=re.I)
-    candidates = [word.replace(".", "") for word in words(cleaned) if word not in STOP]
+    candidates = [word.replace(".", "") for word in words(prompt.strip()) if word not in STOP]
     chosen = candidates[:5] or ["optimized", "goal"]
     title = " ".join(word.upper() if word in {"api", "cli", "sdk", "ci", "cd"} else word for word in chosen)
     return title[:1].upper() + title[1:]

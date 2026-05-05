@@ -14,6 +14,10 @@ uv run python scripts/validate_skill.py
 python scripts/generate_goal_prompt.py --json "Build a FastAPI API with tests"
 ```
 
-## Hermes Agent integration
+Expected behavior:
 
-After applying `patches/hermes-agent-goal-preflight.patch` to a Hermes Agent checkout, run the focused Hermes tests documented in `references/implementation-validation-notes.md`.
+- tests pass,
+- skill packaging validates,
+- the smoke command writes a valid isolated `fastapi-api-tests-goal.md` file,
+- no generated goal is executed,
+- Hermes `/goal` is not invoked or modified.

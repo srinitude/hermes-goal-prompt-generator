@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 AUTONOMY = (
     "Ensure that you can operate everything autonomously without human intervention or a human in the loop, "
@@ -25,7 +25,7 @@ SOFTWARE_CONSTRAINTS = """Ensure you always follow these rules:
 
 REQUIRED_SECTIONS = [
     "Goal", "Original Intent", "Domain", "Assumptions", "Non-Execution Guardrail",
-    "`/goal` Preflight Requirement", "Autonomous Execution Requirement",
+    "Isolated Generation Boundary", "Autonomous Execution Requirement",
     "Research and Source Validation Requirements", "Scope", "Execution Plan",
     "Acceptance Criteria", "Validation Commands", "Completion Definition",
     "Failure Conditions", "Final Output Requirements",

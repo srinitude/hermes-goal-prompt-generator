@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a Hermes `/goal` optimized Markdown file without executing it."""
+"""Generate an isolated Hermes goal Markdown file without executing it."""
 
 from __future__ import annotations
 

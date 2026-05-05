@@ -10,9 +10,9 @@ from .core import prepare_goal_prompt
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate or validate a Hermes /goal optimized Markdown prompt."
+        description="Generate or validate an isolated Hermes goal Markdown prompt."
     )
-    parser.add_argument("prompt", nargs="*", help="Raw prompt text or optimized .md path")
+    parser.add_argument("prompt", nargs="*", help="Raw prompt text or generated .md path")
     parser.add_argument(
         "--dir",
         default=".",
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
-        print(f"Optimized goal file ({prepared.status}): {prepared.file_path}")
+        print(f"Optimized isolated goal file ({prepared.status}): {prepared.file_path}")
         print(f"Title: {prepared.title}")
         print(f"Source prompt hash: {prepared.source_prompt_hash}")
         print(f"Validation: {'valid' if prepared.validation.valid else 'invalid'}")

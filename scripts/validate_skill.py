@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "SKILL.md"
 REQUIRED_LINKED = [
-    ROOT / "references" / "hermes-goal-integration.md",
+    ROOT / "references" / "isolation-contract.md",
     ROOT / "references" / "implementation-validation-notes.md",
     ROOT / "references" / "local-validation.md",
     ROOT / "references" / "research-and-source-validation.md",
