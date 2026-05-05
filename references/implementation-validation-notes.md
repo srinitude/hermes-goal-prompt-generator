@@ -26,6 +26,8 @@ A prompt is valid generated output only if the metadata and body contract are co
 - non-execution guardrail
 - acceptance and validation sections
 - software-development constraints when domain is software or uncertain
+- software-development cleanup requirement when domain is software-development
+- software engineering core principles and rubric when domain is software-development
 
 Partial frontmatter should be regenerated only during explicit generator use.
 

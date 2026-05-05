@@ -14,6 +14,7 @@ REQUIRED_LINKED = [
     ROOT / "references" / "implementation-validation-notes.md",
     ROOT / "references" / "local-validation.md",
     ROOT / "references" / "research-and-source-validation.md",
+    ROOT / "references" / "revalidating-existing-files.md",
     ROOT / "templates" / "optimized-goal-template.md",
     ROOT / "scripts" / "generate_goal_prompt.py",
 ]
@@ -63,6 +64,10 @@ def main() -> int:
     assert len(description) <= 1024, "description exceeds Hermes limit"
     assert "<" not in description and ">" not in description
     assert len(text) <= 100_000, "SKILL.md exceeds Hermes content limit"
+    assert "Software-Development Cleanup Requirement" in text, "cleanup requirement must be documented"
+    assert "ruthless cleanup pass" in text, "cleanup requirement text must be documented"
+    assert "Software Engineering Core Principles" in text, "core principles must be documented"
+    assert "Can every operation state its success type" in text, "engineering rubric must be documented"
     for path in REQUIRED_LINKED:
         assert path.exists(), f"missing linked file: {path.relative_to(ROOT)}"
     print("skill package validation ok")

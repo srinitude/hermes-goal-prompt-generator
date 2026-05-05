@@ -5,7 +5,7 @@
 
 **Hermes Agent skill and CLI for turning one raw goal prompt into one isolated, optimized, reusable Markdown goal file without executing the requested goal.**
 
-`goal-prompt-generator` preserves user intent, detects the prompt domain, injects autonomy and TDD constraints when appropriate, writes a validated Markdown file, and can validate or reuse existing generated files. It is intentionally **not** a Hermes `/goal` preflight hook and does not modify or intercept Hermes Agent's built-in `/goal` command.
+`goal-prompt-generator` preserves user intent, detects the prompt domain, injects autonomy, TDD constraints, software-specific final-diff cleanup, and software engineering core principles/rubric when appropriate, writes a validated Markdown file, and can validate or reuse existing generated files. It is intentionally **not** a Hermes `/goal` preflight hook and does not modify or intercept Hermes Agent's built-in `/goal` command.
 
 ---
 
@@ -15,7 +15,7 @@
 - Linked skill references, templates, and scripts in [`references/`](references), [`templates/`](templates), and [`scripts/`](scripts).
 - A standalone Python package in [`src/goal_prompt_generator`](src/goal_prompt_generator).
 - A CLI command: `goal-prompt-generator`.
-- Tests that verify metadata, domain detection, non-execution guardrails, isolated generation boundaries, file writing, reuse detection, regeneration, and filename collision behavior.
+- Tests that verify metadata, domain detection, non-execution guardrails, isolated generation boundaries, software-specific cleanup injection, software engineering principles/rubric injection, file writing, reuse detection, regeneration, copy equivalence, and filename collision behavior.
 
 ---
 
@@ -106,7 +106,7 @@ domain_confidence: "high-or-moderate-or-low"
 
 The body includes: goal, original intent, domain, assumptions, non-execution guardrail, isolated generation boundary, autonomous execution requirement, research requirements, scope, BOOTSTRAP / RED / GREEN / REFACTOR phases, acceptance criteria, validation commands, completion definition, failure conditions, and final output requirements.
 
-Software-development or uncertain prompts also include strict TDD and implementation constraints.
+Software-development prompts include strict TDD and implementation constraints, a ruthless final-diff cleanup requirement, and a software engineering core principles/rubric section. Uncertain prompts retain the existing strict software-development constraints; clear non-software prompts omit software-specific cleanup and software engineering principles language.
 
 ---
 

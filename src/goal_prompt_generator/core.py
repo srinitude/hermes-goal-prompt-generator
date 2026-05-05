@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .constants import AUTONOMY, SOFTWARE_CONSTRAINTS, VERSION
+from .constants import AUTONOMY, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_CONSTRAINTS, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
 from .markdown import build_optimized_markdown
 from .models import PreparedGoal, ValidationResult
 from .prepare import prepare_goal_prompt
@@ -10,6 +10,8 @@ from .validation import parse_metadata, validate_optimized_markdown
 __all__ = [
     "AUTONOMY",
     "SOFTWARE_CONSTRAINTS",
+    "SOFTWARE_CLEANUP_REQUIREMENT",
+    "SOFTWARE_ENGINEERING_PRINCIPLES",
     "VERSION",
     "PreparedGoal",
     "ValidationResult",

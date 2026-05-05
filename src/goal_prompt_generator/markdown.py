@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from .constants import AUTONOMY, SOFTWARE_CONSTRAINTS, VERSION
+from .constants import AUTONOMY, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_CONSTRAINTS, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
 from .text import classify_domain, make_title, stable_hash
 
 
@@ -54,6 +54,12 @@ def execution_plan() -> str:
     return "## Execution Plan\n\n" + "\n\n".join(phases)
 
 
+def software_constraints(domain: str) -> str:
+    if domain == "software-development":
+        return f"{SOFTWARE_CONSTRAINTS}\n\n{SOFTWARE_CLEANUP_REQUIREMENT}"
+    return SOFTWARE_CONSTRAINTS
+
+
 def final_sections() -> list[str]:
     return [
         "## Acceptance Criteria\n\n- The final result satisfies the original user intent.\n- All assumptions, blockers, and trade-offs are documented.\n- User-facing behavior and observable outcomes are validated.",
@@ -71,6 +77,8 @@ def build_optimized_markdown(prompt: str, now: datetime | None = None) -> str:
     sections = base_sections(raw, domain, confidence, now)
     sections.append(execution_plan())
     if include_software:
-        sections.append(f"## Software Development Constraints\n\n{SOFTWARE_CONSTRAINTS}")
+        sections.append(f"## Software Development Constraints\n\n{software_constraints(domain)}")
+    if domain == "software-development":
+        sections.append(SOFTWARE_ENGINEERING_PRINCIPLES)
     sections.extend(final_sections())
     return "\n\n".join(sections).rstrip() + "\n"

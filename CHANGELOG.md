@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Adds a software-development-only final diff cleanup requirement to generated prompts.
+- Adds a software-development-only software engineering core principles/rubric section.
+- Validates that software-development prompts include the cleanup requirement and core principles/rubric while clear non-software prompts omit them.
+- Adds regression coverage for built-in/shareable output equivalence.
+
 ## 1.0.1 - Isolated generation refactor
 
 - Refocuses `goal-prompt-generator` on explicit, isolated Markdown goal prompt generation.

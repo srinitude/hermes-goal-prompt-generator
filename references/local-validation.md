@@ -23,5 +23,8 @@ Expected behavior:
 - The generated file starts with `generated_by: goal-prompt-generator` metadata.
 - The generated file contains `## Non-Execution Guardrail`, `## Isolated Generation Boundary`, and `## Autonomous Execution Requirement`.
 - Software prompts contain `## Software Development Constraints`.
+- Software prompts contain the ruthless final-diff cleanup requirement.
+- Software prompts contain `## Software Engineering Core Principles` with the condensed engineering rubric.
+- Clear non-software prompts do not contain software cleanup language or software engineering principles.
 - The script does not execute the generated goal.
 - Hermes `/goal` is not invoked, intercepted, or modified.

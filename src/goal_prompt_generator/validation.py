@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .constants import AUTONOMY, REQUIRED_SECTIONS, VERSION
+from .constants import AUTONOMY, REQUIRED_SECTIONS, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
 from .models import ValidationResult
 
 
@@ -52,4 +52,8 @@ def validate_optimized_markdown(text: str) -> ValidationResult:
     confidence = meta.get("domain_confidence", "low")
     if (domain in {"software-development", "uncertain"} or confidence == "low") and "## Software Development Constraints" not in text:
         reasons.append("software-development constraints missing")
+    if domain == "software-development" and SOFTWARE_CLEANUP_REQUIREMENT not in text:
+        reasons.append("software-development cleanup requirement missing")
+    if domain == "software-development" and SOFTWARE_ENGINEERING_PRINCIPLES not in text:
+        reasons.append("software engineering core principles missing")
     return ValidationResult(not reasons, reasons, meta)

@@ -3,6 +3,8 @@
 from .core import (
     AUTONOMY,
     SOFTWARE_CONSTRAINTS,
+    SOFTWARE_ENGINEERING_PRINCIPLES,
+    SOFTWARE_CLEANUP_REQUIREMENT,
     VERSION,
     PreparedGoal,
     ValidationResult,
@@ -17,6 +19,8 @@ from .core import (
 __all__ = [
     "AUTONOMY",
     "SOFTWARE_CONSTRAINTS",
+    "SOFTWARE_CLEANUP_REQUIREMENT",
+    "SOFTWARE_ENGINEERING_PRINCIPLES",
     "VERSION",
     "PreparedGoal",
     "ValidationResult",
