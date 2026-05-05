@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+from .constants import AUTONOMY, SOFTWARE_CONSTRAINTS, VERSION
+from .text import classify_domain, make_title, stable_hash
+
+
+def metadata_block(prompt: str, domain: str, confidence: str, now: datetime | None) -> str:
+    stamp = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).isoformat()
+    rows = [
+        "---",
+        "generated_by: goal-prompt-generator",
+        f'goal_prompt_generator_version: "{VERSION}"',
+        "optimized_for: hermes-agent-goal",
+        "optimization_status: optimized",
+        f'source_prompt_hash: "{stable_hash(prompt)}"',
+        f'generated_at: "{stamp}"',
+        f'domain: "{domain}"',
+        f'domain_confidence: "{confidence}"',
+        "---",
+    ]
+    return "\n".join(rows)
+
+
+def phase(name: str, text: str) -> str:
+    return f"### Phase {name}\n\n{text}"
+
+
+def base_sections(raw: str, domain: str, confidence: str, now: datetime | None) -> list[str]:
+    title = make_title(raw)
+    return [
+        metadata_block(raw, domain, confidence, now),
+        f"\n# {title} Goal",
+        f"## Goal\n\nComplete the user's requested outcome in a concrete, verifiable way: {raw}",
+        f"## Original Intent\n\nPreserve this original request without executing it during optimization:\n\n> {raw}",
+        f"## Domain\n\nDetected domain: `{domain}`. Confidence: `{confidence}`.",
+        "## Assumptions\n\n- Use the active workspace unless a path or repository is specified.\n- Make reasonable assumptions where details are missing and document them before acting.\n- Preserve the user's intent over incidental wording.",
+        "## Non-Execution Guardrail\n\nDo not execute this prompt while generating it. Only enhance, structure, validate, and save it.",
+        "## `/goal` Preflight Requirement\n\nIf this prompt is passed to Hermes Agent's `/goal` workflow and is not already optimized by `goal-prompt-generator`, run `goal-prompt-generator` first, save the optimized Markdown goal file, validate the optimized file, and only then run `/goal` using the optimized file as input.\n\nIf this prompt already contains valid `goal-prompt-generator` metadata and all required sections, do not re-optimize it unnecessarily. Validate it and proceed with `/goal`.",
+        f"## Autonomous Execution Requirement\n\n{AUTONOMY}",
+        "## Research and Source Validation Requirements\n\n- Inspect authoritative documentation, repositories, files, APIs, and runtime behavior relevant to the task before implementation.\n- Do not rely on assumptions when documentation or source code provides authoritative behavior.",
+        "## Scope\n\n### In Scope\n\n- Deliver the requested outcome with explicit assumptions, ordered work, and verifiable results.\n\n### Out of Scope\n\n- Unrelated enhancements, speculative rewrites, and actions requiring unavailable credentials or approvals.",
+    ]
+
+
+def execution_plan() -> str:
+    phases = [
+        phase("0: BOOTSTRAP", "Validate context, prerequisites, source materials, environment, and local quality gates before making changes."),
+        phase("1: RED", "Define failing checks or acceptance evidence that prove the requested outcome is not yet satisfied."),
+        phase("2: GREEN", "Make the smallest complete change or action set needed to satisfy the checks and user-facing requirements."),
+        phase("3: REFACTOR", "Simplify, remove duplication, harden edge cases, and rerun validation without broadening scope."),
+    ]
+    return "## Execution Plan\n\n" + "\n\n".join(phases)
+
+
+def final_sections() -> list[str]:
+    return [
+        "## Acceptance Criteria\n\n- The final result satisfies the original user intent.\n- All assumptions, blockers, and trade-offs are documented.\n- User-facing behavior and observable outcomes are validated.",
+        "## Validation Commands\n\n- Run the relevant local checks, tests, linters, builds, or source inspections for this domain.\n- Record exact commands and outcomes in the final response.",
+        "## Completion Definition\n\nDone means the requested outcome is complete, validated, and summarized with generated or modified artifacts listed explicitly.",
+        "## Failure Conditions\n\n- Required credentials, approvals, legal authorization, payment authorization, or safety constraints are unavailable.\n- Validation fails or cannot be run.\n- The result cannot be verified against the acceptance criteria.",
+        "## Final Output Requirements\n\n- Provide a concise completion summary.\n- List files, artifacts, commands, validation results, blockers, and the next autonomous resume point if blocked.",
+    ]
+
+
+def build_optimized_markdown(prompt: str, now: datetime | None = None) -> str:
+    raw = (prompt or "").strip()
+    domain, confidence = classify_domain(raw)
+    include_software = domain == "software-development" or domain == "uncertain" or confidence == "low"
+    sections = base_sections(raw, domain, confidence, now)
+    sections.append(execution_plan())
+    if include_software:
+        sections.append(f"## Software Development Constraints\n\n{SOFTWARE_CONSTRAINTS}")
+    sections.extend(final_sections())
+    return "\n\n".join(sections).rstrip() + "\n"
