@@ -26,3 +26,5 @@
 ## 1.0.0 - Initial release
 
 - Added Hermes Agent skill content, linked references/templates/scripts, standalone Python package, CLI, tests, examples, and CI workflow.
+
+<!-- deploy-pipeline smoke-test marker (will be reverted in next commit) -->
