@@ -1,19 +1,13 @@
 # Re-validating an existing generated goal file
 
-The CLI helper `scripts/generate_goal_prompt.py` is a *generator*, not a
-validator. Its positional `prompt` argument is always treated as raw prompt
-text — passing a `.md` path will hash the path string and emit a junk
-regenerated file (e.g. `generated-by-goal-prompt-generator-…-goal.md`).
-
-When you need to validate, hand-edit, or sanity-check a generated file in
-place, call the validator directly.
+The CLI helper `scripts/generate_goal_prompt.py` is a *generator*, not an in-place validator. Use `--input-file <path-to-file>.md` only when you explicitly want the helper to reuse an existing valid generated Markdown file or regenerate a new optimized file from an invalid/incomplete file's contents. Positional arguments are always treated as raw prompt text. When you need to validate, hand-edit, or sanity-check a generated file in place without creating or reusing output files, call the validator directly.
 
 ## Inline one-liner
 
 ```bash
 python3 -c "
 import sys, pathlib
-sys.path.insert(0, '/Users/kiren/.hermes/skills/software-development/goal-prompt-generator/src')
+sys.path.insert(0, str(pathlib.Path.home() / '.hermes/skills/software-development/goal-prompt-generator/src'))
 from goal_prompt_generator.validation import validate_optimized_markdown
 text = pathlib.Path('<path-to-file>.md').read_text()
 r = validate_optimized_markdown(text)
@@ -73,4 +67,4 @@ When a generator run completes but a downstream hand-edit invalidates the file:
 1. Run the inline validator above; capture `reasons`.
 2. Look up each reason in the table; apply the verbatim fix.
 3. Re-run the inline validator until `valid: True, reasons: []`.
-4. Do **not** re-run `generate_goal_prompt.py` on the file — that path will hash the path string and produce a fresh junk file, not validate the existing one.
+4. Do **not** re-run `generate_goal_prompt.py` when you only intend to validate the file in place — use the validator directly so no output file is created or reused.

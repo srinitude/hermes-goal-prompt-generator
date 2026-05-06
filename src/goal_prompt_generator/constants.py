@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-VERSION = "1.0.1"
+VERSION = "1.3.0"
 
 AUTONOMY = (
     "Ensure that you can operate everything autonomously without human intervention or a human in the loop, "
@@ -87,12 +87,48 @@ Use this as a checklist:
 
 Engineer software as explicit, typed, observable, cancellable, resource-safe workflows with clear failure semantics and boundary-driven dependency management."""
 
+CLAUDE_CLI_EXECUTION_CONTRACT = (
+    "All implementation work that satisfies this goal MUST be performed by invoking the `claude` CLI (Claude Code) "
+    "with the full required flag set: `--p <instructions-from-hermes-agent>`, `--add-dir <list-of-directories>`, "
+    "`--agent <custom-subagent>`, `--allow-dangerously-skip-permissions`, `--dangerously-skip-permissions`, "
+    "`--debug-file <path>`, `--effort max`, `--include-hook-events`, `--output-format stream-json`, "
+    "`--include-partial-messages`, `--input-format stream-json`, `--json-schema <json-schema>`, "
+    "`--settings <settings-json-file>`, `--strict-mcp-config <mcp-json-file>`, `--system-prompt-file <file>`, "
+    "`--tools <comma-separated-tools>`, `--verbose`, and `--worktree <worktree-name>`. "
+    "The Hermes Agent instructions for this goal are passed verbatim as the `--p` payload; "
+    "every other flag is mandatory and must be populated with a concrete, validated value before launch. "
+    "Do not substitute, omit, or rename any flag in this set, and do not implement the requirements through any "
+    "other mechanism (no inline shell scripts, no other CLIs, no editor sessions, no manual file edits) — "
+    "every change to the repository must originate from a `claude` invocation that carries the full flag set above."
+)
+
+CLAUDE_CLI_REQUIRED_FLAGS = (
+    ("--p", "<instructions-from-hermes-agent>"),
+    ("--add-dir", "<list-of-directories>"),
+    ("--agent", "<custom-subagent>"),
+    ("--allow-dangerously-skip-permissions", "<no-arg>"),
+    ("--dangerously-skip-permissions", "<no-arg>"),
+    ("--debug-file", "<path>"),
+    ("--effort", "max"),
+    ("--include-hook-events", "<no-arg>"),
+    ("--output-format", "stream-json"),
+    ("--include-partial-messages", "<no-arg>"),
+    ("--input-format", "stream-json"),
+    ("--json-schema", "<json-schema>"),
+    ("--settings", "<settings-json-file>"),
+    ("--strict-mcp-config", "<mcp-json-file>"),
+    ("--system-prompt-file", "<file>"),
+    ("--tools", "<comma-separated-tools>"),
+    ("--verbose", "<no-arg>"),
+    ("--worktree", "<worktree-name>"),
+)
+
 REQUIRED_SECTIONS = [
     "Goal", "Original Intent", "Domain", "Assumptions", "Non-Execution Guardrail",
     "Isolated Generation Boundary", "Autonomous Execution Requirement",
     "Research and Source Validation Requirements", "Scope", "Execution Plan",
     "Acceptance Criteria", "Validation Commands", "Completion Definition",
-    "Failure Conditions", "Final Output Requirements",
+    "Failure Conditions", "Final Output Requirements", "Coding Agent Execution Contract",
 ]
 
 SOFTWARE_TERMS = set(

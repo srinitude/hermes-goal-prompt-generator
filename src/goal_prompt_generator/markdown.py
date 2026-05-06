@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from .constants import AUTONOMY, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_CONSTRAINTS, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
+from .constants import AUTONOMY, CLAUDE_CLI_EXECUTION_CONTRACT, CLAUDE_CLI_REQUIRED_FLAGS, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_CONSTRAINTS, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
 from .text import classify_domain, make_title, stable_hash
 
 
@@ -60,6 +60,37 @@ def software_constraints(domain: str) -> str:
     return SOFTWARE_CONSTRAINTS
 
 
+def claude_cli_canonical_invocation() -> str:
+    parts = ["claude"]
+    for name, placeholder in CLAUDE_CLI_REQUIRED_FLAGS:
+        parts.append(name if placeholder == "<no-arg>" else f"{name} {placeholder}")
+    return " ".join(parts)
+
+
+def claude_cli_execution_contract_section() -> str:
+    bullets = []
+    for name, placeholder in CLAUDE_CLI_REQUIRED_FLAGS:
+        shape = name if placeholder == "<no-arg>" else f"{name} {placeholder}"
+        bullets.append(f"- `{shape}`")
+    body = (
+        f"{CLAUDE_CLI_EXECUTION_CONTRACT}\n\n"
+        "### Required `claude` invocation shape\n\n"
+        "Substitute every angle-bracket placeholder with a concrete, validated value before launch. "
+        "Never leave a placeholder literal in the executed command.\n\n"
+        "```bash\n"
+        f"{claude_cli_canonical_invocation()}\n"
+        "```\n\n"
+        "### Required flags (all are mandatory)\n\n"
+        + "\n".join(bullets)
+        + "\n\n### Forbidden alternatives\n\n"
+        "- Do not implement repository changes through any tool other than the `claude` invocation defined above.\n"
+        "- Do not omit, rename, alias, or substitute any flag in the required set.\n"
+        "- Do not run inline shell scripts, other CLIs, editor sessions, or manual file edits to satisfy the requirements.\n"
+        "- Do not paraphrase the flag set — the exact flag spelling above is the contract."
+    )
+    return f"## Coding Agent Execution Contract\n\n{body}"
+
+
 def final_sections() -> list[str]:
     return [
         "## Acceptance Criteria\n\n- The final result satisfies the original user intent.\n- All assumptions, blockers, and trade-offs are documented.\n- User-facing behavior and observable outcomes are validated.",
@@ -81,4 +112,5 @@ def build_optimized_markdown(prompt: str, now: datetime | None = None) -> str:
     if domain == "software-development":
         sections.append(SOFTWARE_ENGINEERING_PRINCIPLES)
     sections.extend(final_sections())
+    sections.append(claude_cli_execution_contract_section())
     return "\n\n".join(sections).rstrip() + "\n"

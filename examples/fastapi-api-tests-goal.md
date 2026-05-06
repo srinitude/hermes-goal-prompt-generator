@@ -1,10 +1,10 @@
 ---
 generated_by: goal-prompt-generator
-goal_prompt_generator_version: "1.0.1"
+goal_prompt_generator_version: "1.3.0"
 optimized_for: hermes-agent-goal
 optimization_status: optimized
 source_prompt_hash: "dc30a04b515cecf114e140aef47eddc08b5b48012bb27f56523152ab8641bbf7"
-generated_at: "2026-05-05T19:15:54.626682+00:00"
+generated_at: "2026-05-06T16:16:26.224648+00:00"
 domain: "software-development"
 domain_confidence: "high"
 ---
@@ -167,3 +167,43 @@ Done means the requested outcome is complete, validated, and summarized with gen
 
 - Provide a concise completion summary.
 - List files, artifacts, commands, validation results, blockers, and the next autonomous resume point if blocked.
+
+## Coding Agent Execution Contract
+
+All implementation work that satisfies this goal MUST be performed by invoking the `claude` CLI (Claude Code) with the full required flag set: `--p <instructions-from-hermes-agent>`, `--add-dir <list-of-directories>`, `--agent <custom-subagent>`, `--allow-dangerously-skip-permissions`, `--dangerously-skip-permissions`, `--debug-file <path>`, `--effort max`, `--include-hook-events`, `--output-format stream-json`, `--include-partial-messages`, `--input-format stream-json`, `--json-schema <json-schema>`, `--settings <settings-json-file>`, `--strict-mcp-config <mcp-json-file>`, `--system-prompt-file <file>`, `--tools <comma-separated-tools>`, `--verbose`, and `--worktree <worktree-name>`. The Hermes Agent instructions for this goal are passed verbatim as the `--p` payload; every other flag is mandatory and must be populated with a concrete, validated value before launch. Do not substitute, omit, or rename any flag in this set, and do not implement the requirements through any other mechanism (no inline shell scripts, no other CLIs, no editor sessions, no manual file edits) — every change to the repository must originate from a `claude` invocation that carries the full flag set above.
+
+### Required `claude` invocation shape
+
+Substitute every angle-bracket placeholder with a concrete, validated value before launch. Never leave a placeholder literal in the executed command.
+
+```bash
+claude --p <instructions-from-hermes-agent> --add-dir <list-of-directories> --agent <custom-subagent> --allow-dangerously-skip-permissions --dangerously-skip-permissions --debug-file <path> --effort max --include-hook-events --output-format stream-json --include-partial-messages --input-format stream-json --json-schema <json-schema> --settings <settings-json-file> --strict-mcp-config <mcp-json-file> --system-prompt-file <file> --tools <comma-separated-tools> --verbose --worktree <worktree-name>
+```
+
+### Required flags (all are mandatory)
+
+- `--p <instructions-from-hermes-agent>`
+- `--add-dir <list-of-directories>`
+- `--agent <custom-subagent>`
+- `--allow-dangerously-skip-permissions`
+- `--dangerously-skip-permissions`
+- `--debug-file <path>`
+- `--effort max`
+- `--include-hook-events`
+- `--output-format stream-json`
+- `--include-partial-messages`
+- `--input-format stream-json`
+- `--json-schema <json-schema>`
+- `--settings <settings-json-file>`
+- `--strict-mcp-config <mcp-json-file>`
+- `--system-prompt-file <file>`
+- `--tools <comma-separated-tools>`
+- `--verbose`
+- `--worktree <worktree-name>`
+
+### Forbidden alternatives
+
+- Do not implement repository changes through any tool other than the `claude` invocation defined above.
+- Do not omit, rename, alias, or substitute any flag in the required set.
+- Do not run inline shell scripts, other CLIs, editor sessions, or manual file edits to satisfy the requirements.
+- Do not paraphrase the flag set — the exact flag spelling above is the contract.

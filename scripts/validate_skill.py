@@ -15,8 +15,10 @@ REQUIRED_LINKED = [
     ROOT / "references" / "local-validation.md",
     ROOT / "references" / "research-and-source-validation.md",
     ROOT / "references" / "revalidating-existing-files.md",
+    ROOT / "references" / "coding-agent-task-list-yaml.md",
     ROOT / "templates" / "optimized-goal-template.md",
     ROOT / "scripts" / "generate_goal_prompt.py",
+    ROOT / "scripts" / "validate_task_list_yaml.py",
 ]
 
 
@@ -68,6 +70,12 @@ def main() -> int:
     assert "ruthless cleanup pass" in text, "cleanup requirement text must be documented"
     assert "Software Engineering Core Principles" in text, "core principles must be documented"
     assert "Can every operation state its success type" in text, "engineering rubric must be documented"
+    assert "Mandatory Final Step" in text, "mandatory final step (task list YAML) must be documented"
+    assert "firecrawl map --limit 5000" in text or "`firecrawl map --limit 5000`" in text \
+        or "firecrawl `map --limit 5000`" in text or "Firecrawl `map --limit 5000`" in text, \
+        "Firecrawl map --limit 5000 requirement must be documented"
+    assert "opensrc" in text, "opensrc validation requirement must be documented"
+    assert "validate_task_list_yaml.py" in text, "task list YAML validator must be referenced"
     for path in REQUIRED_LINKED:
         assert path.exists(), f"missing linked file: {path.relative_to(ROOT)}"
     print("skill package validation ok")

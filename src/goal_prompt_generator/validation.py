@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .constants import AUTONOMY, REQUIRED_SECTIONS, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
+from .constants import AUTONOMY, CLAUDE_CLI_EXECUTION_CONTRACT, CLAUDE_CLI_REQUIRED_FLAGS, REQUIRED_SECTIONS, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
 from .models import ValidationResult
 
 
@@ -56,4 +56,9 @@ def validate_optimized_markdown(text: str) -> ValidationResult:
         reasons.append("software-development cleanup requirement missing")
     if domain == "software-development" and SOFTWARE_ENGINEERING_PRINCIPLES not in text:
         reasons.append("software engineering core principles missing")
+    if CLAUDE_CLI_EXECUTION_CONTRACT not in text:
+        reasons.append("claude CLI execution contract missing")
+    for name, _placeholder in CLAUDE_CLI_REQUIRED_FLAGS:
+        if name not in text:
+            reasons.append(f"required claude CLI flag missing: {name}")
     return ValidationResult(not reasons, reasons, meta)

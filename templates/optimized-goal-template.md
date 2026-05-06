@@ -1,6 +1,6 @@
 ---
 generated_by: goal-prompt-generator
-goal_prompt_generator_version: "1.0.1"
+goal_prompt_generator_version: "1.3.0"
 optimized_for: hermes-agent-goal
 optimization_status: optimized
 source_prompt_hash: "stable-sha256-hash-of-original-prompt"
@@ -145,3 +145,13 @@ Conditions that mean the goal is incomplete or invalid.
 ## Final Output Requirements
 
 Files, artifacts, reports, or summaries the downstream agent must produce.
+
+## Coding Agent Execution Contract
+
+All implementation work that satisfies this goal MUST be performed by invoking the `claude` CLI (Claude Code) with the full required flag set: `--p <instructions-from-hermes-agent>`, `--add-dir <list-of-directories>`, `--agent <custom-subagent>`, `--allow-dangerously-skip-permissions`, `--dangerously-skip-permissions`, `--debug-file <path>`, `--effort max`, `--include-hook-events`, `--output-format stream-json`, `--include-partial-messages`, `--input-format stream-json`, `--json-schema <json-schema>`, `--settings <settings-json-file>`, `--strict-mcp-config <mcp-json-file>`, `--system-prompt-file <file>`, `--tools <comma-separated-tools>`, `--verbose`, and `--worktree <worktree-name>`. The Hermes Agent instructions for this goal are passed verbatim as the `--p` payload; every other flag is mandatory and must be populated with a concrete, validated value before launch. Do not substitute, omit, or rename any flag in this set, and do not implement the requirements through any other mechanism (no inline shell scripts, no other CLIs, no editor sessions, no manual file edits) — every change to the repository must originate from a `claude` invocation that carries the full flag set above.
+
+### Required `claude` invocation shape
+
+```bash
+claude --p <instructions-from-hermes-agent> --add-dir <list-of-directories> --agent <custom-subagent> --allow-dangerously-skip-permissions --dangerously-skip-permissions --debug-file <path> --effort max --include-hook-events --output-format stream-json --include-partial-messages --input-format stream-json --json-schema <json-schema> --settings <settings-json-file> --strict-mcp-config <mcp-json-file> --system-prompt-file <file> --tools <comma-separated-tools> --verbose --worktree <worktree-name>
+```

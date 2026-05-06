@@ -59,7 +59,7 @@ def test_generate_software_goal_file_has_required_contract(tmp_path, monkeypatch
     text = prepared.file_path.read_text()
     assert text == prepared.goal_text
     assert text.startswith("---\ngenerated_by: goal-prompt-generator")
-    assert 'goal_prompt_generator_version: "1.0.1"' in text
+    assert 'goal_prompt_generator_version: "1.3.0"' in text
     assert "optimized_for: hermes-agent-goal" in text
     assert "optimization_status: optimized" in text
     assert "## Non-Execution Guardrail" in text
@@ -136,7 +136,7 @@ def test_uncertain_prompt_uses_stricter_software_constraints(tmp_path, monkeypat
 def test_existing_valid_generated_file_is_reused(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     first = prepare_goal_prompt("Create a Python CLI for invoices")
-    second = prepare_goal_prompt(str(first.file_path))
+    second = prepare_goal_prompt(str(first.file_path), allow_existing_path=True)
 
     assert second.status == "reused"
     assert second.file_path == first.file_path
@@ -150,14 +150,14 @@ def test_invalid_generated_file_is_regenerated(tmp_path, monkeypatch):
     broken = tmp_path / "broken-goal.md"
     broken.write_text("---\ngenerated_by: goal-prompt-generator\n---\n# Missing sections\n")
 
-    prepared = prepare_goal_prompt(str(broken))
+    prepared = prepare_goal_prompt(str(broken), allow_existing_path=True)
 
     assert prepared.status == "regenerated"
     assert prepared.file_path != broken
     assert prepared.file_path.exists()
     assert "## Acceptance Criteria" in prepared.goal_text
 
-    incomplete = prepared.goal_text.replace('goal_prompt_generator_version: "1.0.1"\n', "")
+    incomplete = prepared.goal_text.replace('goal_prompt_generator_version: "1.3.0"\n', "")
     validation = validate_optimized_markdown(incomplete)
     assert not validation.valid
     assert any("goal_prompt_generator_version" in reason for reason in validation.reasons)
@@ -170,3 +170,109 @@ def test_filename_collisions_append_numeric_suffix(tmp_path, monkeypatch):
 
     assert first.file_path.name == "stripe-credit-system-goal.md"
     assert second.file_path.name == "stripe-credit-system-goal-2.md"
+
+
+REQUIRED_CLAUDE_FLAGS = (
+    "--p",
+    "--add-dir",
+    "--agent",
+    "--allow-dangerously-skip-permissions",
+    "--dangerously-skip-permissions",
+    "--debug-file",
+    "--effort max",
+    "--include-hook-events",
+    "--output-format stream-json",
+    "--include-partial-messages",
+    "--input-format stream-json",
+    "--json-schema",
+    "--settings",
+    "--strict-mcp-config",
+    "--system-prompt-file",
+    "--tools",
+    "--verbose",
+    "--worktree",
+)
+
+
+def test_generated_markdown_includes_coding_agent_execution_contract(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    prepared = prepare_goal_prompt("Build a Next.js admin panel with tests")
+    text = prepared.goal_text
+
+    assert "## Coding Agent Execution Contract" in text
+    assert "claude --p <instructions-from-hermes-agent>" in text
+    for flag in REQUIRED_CLAUDE_FLAGS:
+        assert flag in text, f"required claude CLI flag missing in generated Markdown: {flag}"
+
+
+def test_non_software_goal_also_carries_coding_agent_execution_contract(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    prepared = prepare_goal_prompt("Write a heartfelt poem about the ocean at sunrise")
+    text = prepared.goal_text
+
+    assert "## Coding Agent Execution Contract" in text
+    for flag in REQUIRED_CLAUDE_FLAGS:
+        assert flag in text, f"required claude CLI flag missing in non-software Markdown: {flag}"
+
+
+def test_validator_rejects_markdown_missing_coding_agent_execution_contract():
+    text = build_optimized_markdown("Refactor a Python package with tests")
+    section_start = text.index("## Coding Agent Execution Contract")
+    truncated = text[:section_start].rstrip() + "\n"
+
+    validation = validate_optimized_markdown(truncated)
+
+    assert validation.valid is False
+    assert "claude CLI execution contract missing" in validation.reasons
+    assert any(reason.startswith("required claude CLI flag missing:") for reason in validation.reasons)
+
+
+def test_validator_rejects_markdown_with_dropped_claude_flag():
+    text = build_optimized_markdown("Refactor a Python package with tests")
+    tampered = text.replace("--worktree", "--workt-typo")
+
+    validation = validate_optimized_markdown(tampered)
+
+    assert validation.valid is False
+    assert "required claude CLI flag missing: --worktree" in validation.reasons
+
+
+def test_paired_yaml_carries_coding_agent_execution_contract(tmp_path, monkeypatch):
+    import yaml as _yaml
+
+    monkeypatch.chdir(tmp_path)
+    prepared = prepare_goal_prompt("Build a FastAPI receipts API with tests")
+    assert prepared.task_list_path is not None
+    data = _yaml.safe_load(prepared.task_list_path.read_text(encoding="utf-8"))
+
+    contract = data.get("coding_agent_execution_contract")
+    assert isinstance(contract, dict)
+    assert contract["executor"] == "claude"
+    assert contract["rule"]
+    flag_names = [entry["name"] for entry in contract["required_flags"]]
+    for flag in REQUIRED_CLAUDE_FLAGS:
+        bare = flag.split(" ", 1)[0]
+        assert bare in flag_names, f"missing flag {bare} in required_flags"
+    assert contract["canonical_invocation"].startswith("claude ")
+    assert contract["forbidden_alternatives"]
+
+
+def test_yaml_validator_rejects_yaml_missing_contract(tmp_path, monkeypatch):
+    import yaml as _yaml
+
+    monkeypatch.chdir(tmp_path)
+    prepared = prepare_goal_prompt("Build a FastAPI receipts API with tests")
+    yaml_path = prepared.task_list_path
+    data = _yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+    data.pop("coding_agent_execution_contract", None)
+    yaml_path.write_text(_yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+
+    root = Path(__file__).resolve().parents[1]
+    validator = root / "scripts" / "validate_task_list_yaml.py"
+    result = subprocess.run(
+        [sys.executable, str(validator), str(yaml_path)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    combined = result.stdout + result.stderr
+    assert "coding_agent_execution_contract" in combined

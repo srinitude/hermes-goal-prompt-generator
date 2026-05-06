@@ -19,3 +19,5 @@ class PreparedGoal:
     source_prompt_hash: str
     title: str
     validation: ValidationResult
+    task_list_path: Path | None = None
+    handoff_prompt: str = ""

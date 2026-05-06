@@ -94,7 +94,7 @@ Every generated Markdown file starts with machine-readable metadata:
 ```yaml
 ---
 generated_by: goal-prompt-generator
-goal_prompt_generator_version: "1.0.1"
+goal_prompt_generator_version: "1.3.0"
 optimized_for: hermes-agent-goal
 optimization_status: optimized
 source_prompt_hash: "stable-sha256-hash-of-original-prompt"

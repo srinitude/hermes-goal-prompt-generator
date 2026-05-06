@@ -4,7 +4,7 @@ Use these notes when maintaining isolated goal prompt generation.
 
 ## Scope boundary
 
-The canonical implementation lives in `src/goal_prompt_generator/` and the explicit helper script is `scripts/generate_goal_prompt.py`. These files generate and validate Markdown prompt files only.
+The canonical implementation lives in `src/goal_prompt_generator/` and the explicit helper script is `scripts/generate_goal_prompt.py`. These files generate and validate paired Markdown goal contracts and ANALYSIS/BOOTSTRAP/RED/GREEN/REFACTOR task-list YAML files.
 
 Do not add source-level Hermes `/goal` integration to this repository. The generator must not be called automatically from CLI, gateway, TUI, or persistent goal-loop handlers.
 
@@ -31,17 +31,23 @@ A prompt is valid generated output only if the metadata and body contract are co
 
 Partial frontmatter should be regenerated only during explicit generator use.
 
+## Task-list YAML validation
+
+A generated YAML file is valid only if `scripts/validate_task_list_yaml.py` accepts it. The YAML must include ordered ANALYSIS → BOOTSTRAP → RED → GREEN → REFACTOR phases, a RED `hard_gate`, resolvable command/style/guardrail/principle references, and mutable runtime fields limited to task `status`, `learnings`, and `gotchas`.
+
 ## Test isolation pitfall
 
-Tests and smoke runs can write `*-goal.md` files to the process cwd. Run tests in temporary directories where possible, and remove only generated root-level `*-goal*.md` artifacts if they appear.
+Tests and smoke runs can write `*-goal.md` and `*-tdd-tasks.yaml` files to the process cwd. Run tests in temporary directories where possible, and remove only generated root-level artifacts if they appear.
 
 ## Local validation commands
 
 ```bash
-cd /Users/kiren/.hermes/hermes-agent/goal-prompt-generator
-/Users/kiren/.hermes/hermes-agent/venv/bin/python -m py_compile   src/goal_prompt_generator/*.py scripts/*.py
-/Users/kiren/.hermes/hermes-agent/venv/bin/python -m pytest tests -q -o 'addopts='
-/Users/kiren/.hermes/hermes-agent/venv/bin/python scripts/validate_skill.py
+cd <skill-root>
+python3 -m py_compile src/goal_prompt_generator/*.py scripts/*.py
+python3 scripts/validate_skill.py
+tmp=$(mktemp -d)
+python3 scripts/generate_goal_prompt.py --dir "$tmp" "Build a FastAPI API with tests"
+python3 scripts/validate_task_list_yaml.py "$tmp"/*-tdd-tasks.yaml
 ```
 
 Also smoke-test the script from a temporary directory so file-writing behavior is verified without executing the generated goal.

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "goal-prompt-generator"
-version = "1.0.1"
+version = "1.3.0"
 description = "Hermes Agent skill and CLI for isolated optimized goal prompt Markdown files."
 readme = "README.md"
 requires-python = ">=3.10"
