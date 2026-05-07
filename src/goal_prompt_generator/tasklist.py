@@ -8,6 +8,7 @@ import yaml
 
 from .constants import CLAUDE_CLI_EXECUTION_CONTRACT, CLAUDE_CLI_REQUIRED_FLAGS
 from .contrarian_validation import ContrarianValidator
+from .repository import repository_evidence
 from .research import research_evidence
 
 PHASES = ("ANALYSIS", "BOOTSTRAP", "RED", "GREEN", "REFACTOR")
@@ -40,7 +41,8 @@ def claude_cli_canonical_invocation() -> str:
     return " ".join(parts)
 
 
-def coding_agent_execution_contract_block() -> dict[str, Any]:
+def coding_agent_execution_contract_block(claude_worktree: dict[str, Any] | None = None) -> dict[str, Any]:
+    worktree = claude_worktree or {}
     return {
         "executor": "claude",
         "rule": CLAUDE_CLI_EXECUTION_CONTRACT,
@@ -49,6 +51,13 @@ def coding_agent_execution_contract_block() -> dict[str, Any]:
             for name, placeholder in CLAUDE_CLI_REQUIRED_FLAGS
         ],
         "canonical_invocation": claude_cli_canonical_invocation(),
+        "worktree_directory": {
+            "flag": worktree.get("flag") or "--worktree",
+            "short_flag": worktree.get("short_flag") or "-w",
+            "root": worktree.get("root") or "<repo-root>/.claude/worktrees",
+            "directory_template": worktree.get("directory_template") or "<repo-root>/.claude/worktrees/<worktree-name>",
+            "resolution_rule": worktree.get("resolution_rule") or "Resolve the --worktree/-w name under the active repository root before launching Claude Code.",
+        },
         "forbidden_alternatives": [
             "Implementing changes through any tool other than `claude` (no inline shell scripts, no other CLIs, no editor sessions, no manual file edits).",
             "Omitting, renaming, aliasing, or substituting any flag in the required set.",
@@ -96,9 +105,10 @@ def _validation_reconciliation(goal_path: Path, yaml_dict: dict[str, Any]) -> di
     """Replay contrarian re-verification offline against the freshly built YAML.
 
     Runs only filesystem/dict checks (no network): principles, topology, hard_gate,
-    coding-agent execution contract, and a replay of cached Firecrawl map entries
-    when their on-disk JSON is reachable. The result becomes the YAML's top-level
-    ``validation_reconciliation`` block so optimistic claims cannot land silently.
+    coding-agent execution contract, repository key-path existence, and a replay of
+    cached Firecrawl map entries when their on-disk JSON is reachable. The result
+    becomes the YAML's top-level ``validation_reconciliation`` block so optimistic
+    claims cannot land silently.
     """
     md = goal_path.read_text(encoding="utf-8") if goal_path.exists() else ""
     validator = ContrarianValidator()
@@ -106,6 +116,9 @@ def _validation_reconciliation(goal_path: Path, yaml_dict: dict[str, Any]) -> di
     validator.recheck_phase_dependency_topology(yaml_dict)
     validator.recheck_hard_gate_text(yaml_dict)
     validator.recheck_coding_agent_execution_contract(md, yaml_dict)
+    repo = (yaml_dict.get("validation_evidence") or {}).get("repository_context") or {}
+    for key_path in (repo.get("key_paths") or []):
+        validator.recheck_repository_key_path(repo.get("workdir", ""), key_path)
     firecrawl = (yaml_dict.get("validation_evidence") or {}).get("firecrawl") or {}
     for tech, entry in (firecrawl.get("required_maps_present") or {}).items():
         data = entry or {}
@@ -117,7 +130,14 @@ def _validation_reconciliation(goal_path: Path, yaml_dict: dict[str, Any]) -> di
     return validator.reconcile().to_dict()
 
 
-def build_task_list(goal_path: Path, task_path: Path, source_hash: str, title: str) -> dict[str, Any]:
+def build_task_list(
+    goal_path: Path,
+    task_path: Path,
+    source_hash: str,
+    title: str,
+    workdir: str | Path | None = None,
+    repository: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     all_principles = list(PRINCIPLES)
     tasks = {
         "ANALYSIS": [task("A01", "Read the immutable goal contract and derive execution context", [], ["B01"], all_principles[:4]),
@@ -134,15 +154,28 @@ def build_task_list(goal_path: Path, task_path: Path, source_hash: str, title: s
     quoted_goal = shlex.quote(goal)
     quoted_yaml = shlex.quote(yaml_file)
     quoted_validator = shlex.quote(validator)
+    repo_evidence = repository if repository is not None else repository_evidence(workdir)
+    repo_key_paths = list(repo_evidence.get("key_paths") or [])
+    claude_worktree = repo_evidence.get("claude_worktree") or {}
     data = {
         "metadata": {
             "plan_id": task_path.stem,
             "version": "1.0.0",
             "source_goal_markdown_path": goal,
             "source_prompt_hash": source_hash,
-            "hard_invariants": ["Markdown contract is immutable", "Only task status, learnings, and gotchas are mutable"],
+            "workdir": repo_evidence.get("workdir", ""),
+            "repo_root": repo_evidence.get("repo_root", ""),
+            "hard_invariants": [
+                "Markdown contract is immutable",
+                "Only task status, learnings, and gotchas are mutable",
+                "Repository key paths must exist before any edit and must be re-verified at execution time",
+                "Claude Code --worktree/-w directory must resolve under the active Hermes worktree repo root at .claude/worktrees/<worktree-name>",
+            ],
         },
-        "validation_evidence": research_evidence(task_path.parent),
+        "validation_evidence": {
+            **research_evidence(task_path.parent),
+            "repository_context": repo_evidence,
+        },
         "styleguide_rules": {
             "S1": "Keep files and constructs small, focused, and readable.",
             "S2": "Tests validate user-facing behavior, not implementation details.",
@@ -168,19 +201,29 @@ def build_task_list(goal_path: Path, task_path: Path, source_hash: str, title: s
             "resume_protocol": "Read the Markdown contract first, then continue from the first pending YAML task in phase order.",
             "handoff_goal_markdown": goal,
             "handoff_task_list_yaml": yaml_file,
+            "handoff_workdir": repo_evidence.get("workdir", ""),
+            "claude_worktree_root": claude_worktree.get("root", ""),
+            "claude_worktree_directory_template": claude_worktree.get("directory_template", ""),
+            "claude_worktree_resolution": claude_worktree.get("resolution_rule", ""),
         },
-        "coding_agent_execution_contract": coding_agent_execution_contract_block(),
+        "coding_agent_execution_contract": coding_agent_execution_contract_block(claude_worktree),
     }
     for phase in data["phases"]:
         for item in phase["tasks"]:
-            item["context_files"] = [goal, yaml_file]
+            item["context_files"] = [goal, yaml_file, *repo_key_paths]
     data["validation_reconciliation"] = _validation_reconciliation(goal_path, data)
     return data
 
 
-def write_task_list(goal_path: Path, source_hash: str, title: str) -> Path:
+def write_task_list(
+    goal_path: Path,
+    source_hash: str,
+    title: str,
+    workdir: str | Path | None = None,
+    repository: dict[str, Any] | None = None,
+) -> Path:
     path = task_list_path(goal_path)
-    data = build_task_list(goal_path, path, source_hash, title)
+    data = build_task_list(goal_path, path, source_hash, title, workdir=workdir, repository=repository)
     path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
     return path
 

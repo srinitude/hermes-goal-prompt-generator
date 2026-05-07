@@ -7,7 +7,7 @@ from .models import ValidationResult
 # current validator must continue to accept verbatim. Keep this list in sync
 # with any prior `VERSION` value still in the wild on disk so that previously
 # generated Markdown files do not silently invalidate after a release bump.
-LEGACY_GENERATOR_VERSIONS = ("1.3.0",)
+LEGACY_GENERATOR_VERSIONS = ("1.3.0", "1.4.0", "1.5.0")
 
 
 def parse_metadata(text: str) -> dict[str, str]:
@@ -54,7 +54,14 @@ def _validate_metadata(meta: dict[str, str]) -> list[str]:
 
 def _validate_structure(text: str, meta: dict[str, str]) -> list[str]:
     reasons: list[str] = []
+    # The "Repository Context" section was introduced in 1.6.0; any goal Markdown
+    # whose frontmatter declares a legacy generator version (1.3.0..1.5.0) was
+    # produced before the workdir-aware contract existed, so we must accept it
+    # without that section. Everything else is required everywhere.
+    legacy = meta.get("goal_prompt_generator_version") in LEGACY_GENERATOR_VERSIONS
     for section in REQUIRED_SECTIONS:
+        if legacy and section == "Repository Context":
+            continue
         if f"## {section}" not in text:
             reasons.append(f"missing section: {section}")
     if AUTONOMY not in text:

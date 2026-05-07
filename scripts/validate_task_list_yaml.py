@@ -380,6 +380,47 @@ def validate(path: Path) -> list[str]:
                     f"opensrc.fetched[{repo}]: key_paths must be a non-empty list"
                 )
 
+    repo_ctx = _as_dict(
+        evidence.get("repository_context"),
+        "validation_evidence.repository_context",
+        problems,
+    )
+    # repository_context is required for goal contracts produced by 1.6.0+,
+    # but we accept its absence on legacy YAMLs (no plan_id rotation, no
+    # workdir field on metadata) so the structural validator does not silently
+    # invalidate already-shipped runtime ledgers. New writes ALWAYS set it.
+    metadata = _as_dict(data.get("metadata"), "metadata", [])
+    expects_repo_ctx = "workdir" in metadata or "repo_root" in metadata
+    if expects_repo_ctx:
+        for required in ("workdir", "repo_root", "key_paths", "claude_worktree"):
+            if required not in repo_ctx:
+                problems.append(
+                    f"validation_evidence.repository_context: missing {required!r}"
+                )
+        key_paths = _as_list(
+            repo_ctx.get("key_paths"),
+            "validation_evidence.repository_context.key_paths",
+            problems,
+        )
+        for idx, entry in enumerate(key_paths):
+            if not (isinstance(entry, str) and entry.strip()):
+                problems.append(
+                    f"validation_evidence.repository_context.key_paths[{idx}]: must be a non-empty string"
+                )
+        claude_repo = _as_dict(
+            repo_ctx.get("claude_worktree"),
+            "validation_evidence.repository_context.claude_worktree",
+            problems,
+        )
+        if claude_repo:
+            if claude_repo.get("flag") != "--worktree":
+                problems.append("validation_evidence.repository_context.claude_worktree.flag: must be '--worktree'")
+            if claude_repo.get("short_flag") != "-w":
+                problems.append("validation_evidence.repository_context.claude_worktree.short_flag: must be '-w'")
+            template = claude_repo.get("directory_template")
+            if not (isinstance(template, str) and ".claude/worktrees/<worktree-name>" in template):
+                problems.append("validation_evidence.repository_context.claude_worktree.directory_template: must resolve to .claude/worktrees/<worktree-name>")
+
     _check_reconciliation_required(data, evidence, fc_maps, osrc_fetched, problems)
     _check_reconciliation_shape(data, problems)
 
@@ -435,6 +476,23 @@ def validate(path: Path) -> list[str]:
                     problems.append(
                         f"coding_agent_execution_contract.canonical_invocation: missing flag {flag}"
                     )
+        worktree = _as_dict(
+            contract.get("worktree_directory"),
+            "coding_agent_execution_contract.worktree_directory",
+            problems,
+        )
+        if worktree:
+            if worktree.get("flag") != "--worktree":
+                problems.append("coding_agent_execution_contract.worktree_directory.flag: must be '--worktree'")
+            if worktree.get("short_flag") != "-w":
+                problems.append("coding_agent_execution_contract.worktree_directory.short_flag: must be '-w'")
+            for key in ("root", "directory_template", "resolution_rule"):
+                value = worktree.get(key)
+                if not (isinstance(value, str) and value.strip()):
+                    problems.append(f"coding_agent_execution_contract.worktree_directory.{key}: missing or empty")
+            template = worktree.get("directory_template")
+            if isinstance(template, str) and ".claude/worktrees/<worktree-name>" not in template:
+                problems.append("coding_agent_execution_contract.worktree_directory.directory_template: must resolve to .claude/worktrees/<worktree-name>")
         forbidden = _as_list(
             contract.get("forbidden_alternatives"),
             "coding_agent_execution_contract.forbidden_alternatives",

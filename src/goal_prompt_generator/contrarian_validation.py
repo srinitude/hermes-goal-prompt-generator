@@ -139,6 +139,28 @@ class ContrarianValidator:
             return None
         return self._emit("helper_present", absolute_path, f"helper at {absolute_path}", f"helper missing on host filesystem: {absolute_path}", "error", EXEC_TIME)
 
+    def recheck_repository_key_path(self, workdir, key_path):
+        """Falsify a Markdown/YAML claim that ``key_path`` exists in the workdir.
+
+        Repository key paths are seeded into every task's ``context_files`` so the
+        downstream coding agent can read them before editing. If a path the
+        snapshot promised no longer exists (renamed file, removed config, stale
+        cache, retargeted workdir), we MUST surface the divergence rather than
+        silently keep the optimistic context_files entry. ``downgraded_to_attempted``
+        encodes that the path was claimed at generation but unverifiable now.
+        """
+        target = Path(key_path.rstrip("/"))
+        if target.exists():
+            return None
+        return self._emit(
+            "repository_key_path",
+            key_path,
+            f"workdir={workdir!r} key path {key_path}",
+            f"key path missing on filesystem: {key_path}",
+            "warn",
+            ATTEMPTED,
+        )
+
     def recheck_principle_coverage(self, yaml_dict):
         raw = yaml_dict.get("principles") or {}
         principles = list(raw) if isinstance(raw, dict) else [p.get("id") for p in raw if isinstance(p, dict)]

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-VERSION = "1.4.0"
+VERSION = "1.6.0"
 
 # All artifacts produced by goal-prompt-generator land here unless the caller
 # passes an explicit --dir / execution_dir override. The directory is created
@@ -112,6 +112,9 @@ CLAUDE_CLI_EXECUTION_CONTRACT = (
     "`--tools <comma-separated-tools>`, `--verbose`, and `--worktree <worktree-name>`. "
     "The Hermes Agent instructions for this goal are passed verbatim as the `--p` payload; "
     "every other flag is mandatory and must be populated with a concrete, validated value before launch. "
+    "When populating `--worktree <worktree-name>`, resolve the filesystem directory as "
+    "`<active-repo-root>/.claude/worktrees/<worktree-name>` inside the current Hermes worktree recorded in "
+    "Repository Context; do not place Claude worktrees under a parent checkout or outside the active Hermes worktree. "
     "Do not substitute, omit, or rename any flag in this set, and do not implement the requirements through any "
     "other mechanism (no inline shell scripts, no other CLIs, no editor sessions, no manual file edits) — "
     "every change to the repository must originate from a `claude` invocation that carries the full flag set above."
@@ -141,8 +144,8 @@ CLAUDE_CLI_REQUIRED_FLAGS = (
 REQUIRED_SECTIONS = [
     "Goal", "Original Intent", "Domain", "Assumptions", "Non-Execution Guardrail",
     "Isolated Generation Boundary", "Autonomous Execution Requirement",
-    "Research and Source Validation Requirements", "Scope", "Execution Plan",
-    "Acceptance Criteria", "Validation Commands", "Completion Definition",
+    "Research and Source Validation Requirements", "Repository Context", "Scope",
+    "Execution Plan", "Acceptance Criteria", "Validation Commands", "Completion Definition",
     "Failure Conditions", "Final Output Requirements", "Coding Agent Execution Contract",
 ]
 

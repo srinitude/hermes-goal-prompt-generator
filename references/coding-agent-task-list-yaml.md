@@ -365,6 +365,12 @@ coding_agent_execution_contract:
     --tools <comma-separated-tools>
     --verbose
     --worktree <worktree-name>
+  worktree_directory:
+    flag: "--worktree"
+    short_flag: "-w"
+    root: "<repo_root>/.claude/worktrees"
+    directory_template: "<repo_root>/.claude/worktrees/<worktree-name>"
+    resolution_rule: "Resolve the --worktree/-w name under the active repository root recorded in validation_evidence.repository_context; if Hermes is running from .worktrees/hermes-*, keep the Claude worktree inside that current Hermes worktree."
   forbidden_alternatives:
     - "Implementing changes through any tool other than `claude` (no inline shell scripts, no other CLIs, no editor sessions, no manual file edits)."
     - "Omitting, renaming, aliasing, or substituting any flag in the required set."
@@ -379,6 +385,7 @@ coding_agent_execution_contract:
 - `rule` must be a non-empty string.
 - `required_flags` must contain an entry whose `name` is each of the 18 flags listed above; every entry must carry a non-empty `placeholder` string (use `"<no-arg>"` for boolean flags).
 - `canonical_invocation` must be non-empty, must start with `claude `, and must mention every flag in the required set as a literal substring.
+- `worktree_directory` must be a mapping with `flag: "--worktree"`, `short_flag: "-w"`, non-empty `root`, non-empty `resolution_rule`, and a `directory_template` containing `.claude/worktrees/<worktree-name>` so the required `--worktree` flag resolves inside the active Hermes worktree rather than a parent checkout.
 - `forbidden_alternatives` must be a non-empty list.
 
 Run the validator immediately after writing the YAML; missing or malformed contract entries fail the file at generation time, not at agent runtime.

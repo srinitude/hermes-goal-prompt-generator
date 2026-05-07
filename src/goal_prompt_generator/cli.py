@@ -39,6 +39,15 @@ def build_parser() -> argparse.ArgumentParser:
             f"Defaults to {DEFAULT_OUTPUT_DIR} (created on demand)."
         ),
     )
+    parser.add_argument(
+        "--workdir",
+        default=None,
+        help=(
+            "Repository directory to introspect for the generated Markdown's "
+            "`## Repository Context` section and the YAML's `validation_evidence.repository_context`. "
+            "Defaults to the current working directory."
+        ),
+    )
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON")
     return parser
 
@@ -52,7 +61,13 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     output_dir = Path(args.dir).expanduser().resolve() if args.dir else default_output_dir()
-    prepared = prepare_goal_prompt(prompt, execution_dir=output_dir, allow_existing_path=bool(args.input_file))
+    workdir = Path(args.workdir).expanduser().resolve() if args.workdir else None
+    prepared = prepare_goal_prompt(
+        prompt,
+        execution_dir=output_dir,
+        allow_existing_path=bool(args.input_file),
+        workdir=workdir,
+    )
     task_list_valid, task_list_validation = validate_task_list(prepared.task_list_path)
     payload = {
         "file_path": str(prepared.file_path),

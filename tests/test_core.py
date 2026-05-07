@@ -282,7 +282,33 @@ def test_paired_yaml_carries_coding_agent_execution_contract(tmp_path, monkeypat
         bare = flag.split(" ", 1)[0]
         assert bare in flag_names, f"missing flag {bare} in required_flags"
     assert contract["canonical_invocation"].startswith("claude ")
+    worktree = contract["worktree_directory"]
+    assert worktree["flag"] == "--worktree"
+    assert worktree["short_flag"] == "-w"
+    assert worktree["directory_template"].endswith("/.claude/worktrees/<worktree-name>")
+    assert "active repository root" in worktree["resolution_rule"]
     assert contract["forbidden_alternatives"]
+
+
+def test_yaml_validator_rejects_contract_missing_worktree_directory(tmp_path, monkeypatch):
+    import yaml as _yaml
+
+    monkeypatch.chdir(tmp_path)
+    prepared = prepare_goal_prompt("Build a FastAPI receipts API with tests")
+    yaml_path = prepared.task_list_path
+    data = _yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+    data["coding_agent_execution_contract"].pop("worktree_directory", None)
+    yaml_path.write_text(_yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+
+    root = Path(__file__).resolve().parents[1]
+    validator = root / "scripts" / "validate_task_list_yaml.py"
+    result = subprocess.run(
+        [sys.executable, str(validator), str(yaml_path)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    combined = result.stdout + result.stderr
+    assert "worktree_directory" in combined
 
 
 def test_yaml_validator_rejects_yaml_missing_contract(tmp_path, monkeypatch):

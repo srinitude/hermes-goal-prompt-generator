@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.0 - Deep repository/codebase context exploration
+
+- Adds `goal_prompt_generator.repository.repository_evidence(workdir)` — a stdlib-only snapshot of the invoking workdir: VCS state (head SHA, branch, remote, dirty flag), manifests, lockfiles, agent-context files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `.cursor/rules`, `.github/copilot-instructions.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `DESIGN.md`, `README.md`), CI configs, primary-language breakdown, top-level layout, Claude Code `--worktree`/`-w` directory resolution (`<repo_root>/.claude/worktrees/<worktree-name>`), and a curated absolute-path key-path list.
+- Adds a new top-level `## Repository Context` section to every generated Markdown goal prompt; legacy 1.3.0–1.5.0 contracts on disk are still accepted by the validator without that section.
+- Adds `validation_evidence.repository_context` to every paired YAML, plus `metadata.workdir`/`metadata.repo_root`, `agent_runtime_protocol.handoff_workdir`, `agent_runtime_protocol.claude_worktree_*`, and `coding_agent_execution_contract.worktree_directory`. Every task's `context_files` is seeded with the curated repository key paths so the downstream coding agent reads them before producing a diff.
+- Plumbs `workdir` through `prepare_goal_prompt(prompt, workdir=...)`, `build_optimized_markdown(prompt, workdir=...)`, `write_task_list(..., workdir=...)`, and `build_task_list(..., workdir=...)`. Adds a new `--workdir <path>` flag to the helper CLI; default remains the cwd.
+- Adds `ContrarianValidator.recheck_repository_key_path(workdir, key_path)` so the offline reconciliation pass downgrades vanished key paths to `downgraded_to_attempted` in `validation_reconciliation`.
+- `scripts/validate_task_list_yaml.py` now requires the `repository_context` block whenever `metadata.workdir`/`metadata.repo_root` is set, including the `claude_worktree` block; older YAMLs without those fields remain accepted.
+- Adds `references/repository-context-exploration.md` and a new pitfall (#42) covering the workdir-snapshot honesty rules.
+- Bumps `VERSION` to `1.6.0` and adds `1.5.0` to `LEGACY_GENERATOR_VERSIONS`.
+- Adds `tests/test_repository_evidence.py` (10 tests covering repository introspection, Claude worktree directory evidence, Markdown rendering, YAML wiring, structural validation, and legacy-version compatibility).
+
 ## 1.4.0 - Contrarian validation + reconciliation
 
 - Adds `ContrarianValidator`, `Conflict`, and `Reconciliation` for falsification-first rechecks of Firecrawl, opensrc, principle coverage, phase topology, hard gates, helper paths, and coding-agent execution contracts.

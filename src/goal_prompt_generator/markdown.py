@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 from .constants import AUTONOMY, CLAUDE_CLI_EXECUTION_CONTRACT, CLAUDE_CLI_REQUIRED_FLAGS, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_CONSTRAINTS, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
+from .repository import render_repository_context_markdown, repository_evidence
 from .text import classify_domain, make_title, stable_hash
 
 
@@ -101,11 +104,18 @@ def final_sections() -> list[str]:
     ]
 
 
-def build_optimized_markdown(prompt: str, now: datetime | None = None) -> str:
+def build_optimized_markdown(
+    prompt: str,
+    now: datetime | None = None,
+    workdir: str | Path | None = None,
+    repository: dict[str, Any] | None = None,
+) -> str:
     raw = (prompt or "").strip()
     domain, confidence = classify_domain(raw)
     include_software = domain == "software-development" or domain == "uncertain" or confidence == "low"
     sections = base_sections(raw, domain, confidence, now)
+    repo_evidence = repository if repository is not None else repository_evidence(workdir)
+    sections.append(render_repository_context_markdown(repo_evidence))
     sections.append(execution_plan())
     if include_software:
         sections.append(f"## Software Development Constraints\n\n{software_constraints(domain)}")

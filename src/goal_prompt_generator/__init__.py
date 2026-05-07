@@ -16,9 +16,12 @@ from .core import (
     handoff_prompt,
     parse_metadata,
     prepare_goal_prompt,
+    render_repository_context_markdown,
+    repository_evidence,
     stable_hash,
     task_list_path,
     validate_optimized_markdown,
+    workdir_path,
     write_task_list,
 )
 
@@ -38,8 +41,11 @@ __all__ = [
     "handoff_prompt",
     "parse_metadata",
     "prepare_goal_prompt",
+    "render_repository_context_markdown",
+    "repository_evidence",
     "stable_hash",
     "task_list_path",
     "validate_optimized_markdown",
+    "workdir_path",
     "write_task_list",
 ]

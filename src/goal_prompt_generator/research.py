@@ -76,6 +76,9 @@ def firecrawl_evidence(output_dir: Path) -> dict[str, Any]:
     evidence["cli_version"] = _first_line(version)
     code, status = _run(["firecrawl", "--status"])
     evidence["auth"] = _firecrawl_auth(status) if code == 0 else "unavailable"
+    if evidence["auth"] == "authenticated" and not evidence["required_maps_present"]:
+        evidence["auth"] = "unavailable"
+        evidence["evidence"].append("Firecrawl authenticated but no cached map evidence was present; official documentation validation remains execution-time required.")
     evidence["evidence"].append("Firecrawl readiness probed with `firecrawl --status` and downgraded via _firecrawl_auth when the banner surfaces a live HTTP RST/fetch-failed marker; refresh map/scrape/crawl/agent evidence at execution time unless cached entries above are still valid.")
     return evidence
 

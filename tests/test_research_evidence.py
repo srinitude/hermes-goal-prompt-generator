@@ -6,6 +6,13 @@ from goal_prompt_generator.research import _firecrawl_auth, research_evidence
 
 
 def test_research_evidence_records_available_tools(tmp_path, monkeypatch):
+    maps = tmp_path / "research" / "url-maps"
+    maps.mkdir(parents=True)
+    (maps / "claude-code.json").write_text(
+        '{"success": true, "data": {"links": [{"url": "https://code.claude.com/docs/en/worktrees"}]}}',
+        encoding="utf-8",
+    )
+
     def command_path(name: str) -> str:
         return f"/bin/{name}"
 
@@ -49,6 +56,25 @@ def test_firecrawl_auth_downgrades_on_live_http_rst_markers():
         assert _firecrawl_auth(banner) == "unavailable", marker
     assert _firecrawl_auth("missing key") == "unavailable"
     assert _firecrawl_auth("") == "unavailable"
+
+
+def test_firecrawl_evidence_downgrades_authenticated_without_cached_maps(tmp_path, monkeypatch):
+    monkeypatch.setattr("goal_prompt_generator.research.shutil.which", lambda name: f"/bin/{name}")
+
+    def command_result(args, capture_output, text, timeout):
+        cmd = " ".join(args)
+        if cmd == "firecrawl --version":
+            return SimpleNamespace(returncode=0, stdout="1.16.0\n", stderr="")
+        if cmd == "firecrawl --status":
+            return SimpleNamespace(returncode=0, stdout="Authenticated via FIRECRAWL_API_KEY\n", stderr="")
+        if cmd == "opensrc --version":
+            return SimpleNamespace(returncode=0, stdout="opensrc 0.7.2\n", stderr="")
+        raise AssertionError(cmd)
+
+    monkeypatch.setattr("goal_prompt_generator.research.subprocess.run", command_result)
+    evidence = research_evidence(tmp_path)
+    assert evidence["firecrawl"]["auth"] == "unavailable"
+    assert evidence["firecrawl"]["required_maps_present"] == {}
 
 
 def test_firecrawl_evidence_uses_downgrade_helper(tmp_path, monkeypatch):
