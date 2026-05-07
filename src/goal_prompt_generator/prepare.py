@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
+from .constants import default_output_dir
 from .markdown import build_optimized_markdown
 from .models import PreparedGoal, ValidationResult
 from .tasklist import handoff_prompt, write_task_list
@@ -54,7 +55,7 @@ def prepare_goal_prompt(
     now: datetime | None = None,
     allow_existing_path: bool = False,
 ) -> PreparedGoal:
-    directory = Path(execution_dir or Path.cwd()).expanduser().resolve()
+    directory = Path(execution_dir).expanduser().resolve() if execution_dir else default_output_dir()
     directory.mkdir(parents=True, exist_ok=True)
     raw = (prompt or "").strip()
     existing = path_candidate(raw, directory) if allow_existing_path else None

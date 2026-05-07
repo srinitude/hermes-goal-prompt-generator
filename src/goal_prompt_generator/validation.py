@@ -3,6 +3,12 @@ from __future__ import annotations
 from .constants import AUTONOMY, CLAUDE_CLI_EXECUTION_CONTRACT, CLAUDE_CLI_REQUIRED_FLAGS, REQUIRED_SECTIONS, SOFTWARE_CLEANUP_REQUIREMENT, SOFTWARE_ENGINEERING_PRINCIPLES, VERSION
 from .models import ValidationResult
 
+# Generator versions whose immutable, already-generated goal contracts the
+# current validator must continue to accept verbatim. Keep this list in sync
+# with any prior `VERSION` value still in the wild on disk so that previously
+# generated Markdown files do not silently invalidate after a release bump.
+LEGACY_GENERATOR_VERSIONS = ("1.3.0",)
+
 
 def parse_metadata(text: str) -> dict[str, str]:
     if not text.startswith("---\n"):
@@ -19,26 +25,35 @@ def parse_metadata(text: str) -> dict[str, str]:
     return meta
 
 
-def validate_optimized_markdown(text: str) -> ValidationResult:
-    meta = parse_metadata(text or "")
+def accepted_generator_versions() -> tuple[str, ...]:
+    """Return every goal_prompt_generator_version literal the validator accepts."""
+    return (VERSION, *LEGACY_GENERATOR_VERSIONS)
+
+
+def _validate_metadata(meta: dict[str, str]) -> list[str]:
     reasons: list[str] = []
-    required_meta = {
+    fixed_meta = {
         "generated_by": "goal-prompt-generator",
-        "goal_prompt_generator_version": VERSION,
         "optimized_for": "hermes-agent-goal",
         "optimization_status": "optimized",
     }
-    for key, value in required_meta.items():
+    for key, value in fixed_meta.items():
         if meta.get(key) != value:
             reasons.append(f"metadata {key} must equal {value}")
-    if not meta.get("source_prompt_hash"):
-        reasons.append("source_prompt_hash is required")
-    if not meta.get("generated_at"):
-        reasons.append("generated_at is required")
-    if not meta.get("domain"):
-        reasons.append("domain is required")
+    accepted = accepted_generator_versions()
+    if meta.get("goal_prompt_generator_version") not in accepted:
+        listing = ", ".join(accepted)
+        reasons.append(f"metadata goal_prompt_generator_version must be one of: {listing}")
+    for required in ("source_prompt_hash", "generated_at", "domain"):
+        if not meta.get(required):
+            reasons.append(f"{required} is required")
     if meta.get("domain_confidence") not in {"high", "moderate", "low"}:
         reasons.append("domain_confidence must be high, moderate, or low")
+    return reasons
+
+
+def _validate_structure(text: str, meta: dict[str, str]) -> list[str]:
+    reasons: list[str] = []
     for section in REQUIRED_SECTIONS:
         if f"## {section}" not in text:
             reasons.append(f"missing section: {section}")
@@ -61,4 +76,10 @@ def validate_optimized_markdown(text: str) -> ValidationResult:
     for name, _placeholder in CLAUDE_CLI_REQUIRED_FLAGS:
         if name not in text:
             reasons.append(f"required claude CLI flag missing: {name}")
+    return reasons
+
+
+def validate_optimized_markdown(text: str) -> ValidationResult:
+    meta = parse_metadata(text or "")
+    reasons = _validate_metadata(meta) + _validate_structure(text, meta)
     return ValidationResult(not reasons, reasons, meta)
