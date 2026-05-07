@@ -52,6 +52,17 @@ REQUIRED_TOP_LEVEL = {
     "coding_agent_execution_contract",
 }
 
+LEGACY_RECONCILIATION_KEY = "contrary_evidence_already_collected"
+RECONCILIATION_FINAL_STATES = {
+    "all-claims-reconciled",
+    "some-claims-downgraded",
+    "some-claims-escalated-to-execution-time",
+}
+RECONCILIATION_CONFLICT_FIELDS = {
+    "check_id", "evidence_target", "original_claim",
+    "contrarian_observation", "severity", "resolution",
+}
+
 PHASE_ORDER = ("ANALYSIS", "BOOTSTRAP", "RED", "GREEN", "REFACTOR")
 
 ALLOWED_STATUS = {"pending", "in_progress", "completed", "blocked", "cancelled"}
@@ -99,6 +110,56 @@ def _phase_index(name: str) -> int:
         return PHASE_ORDER.index(name)
     except ValueError:
         return -1
+
+
+def _check_reconciliation_required(
+    data: dict[str, Any],
+    evidence: dict[str, Any],
+    fc_maps: dict[str, Any],
+    osrc_fetched: dict[str, Any],
+    problems: list[str],
+) -> None:
+    """Refuse YAMLs that claim Firecrawl/opensrc evidence but skip reconciliation.
+
+    Compatibility shim: a non-empty validation_evidence.contrary_evidence_already_collected
+    list is treated as legacy reconciliation evidence so we do not invalidate the
+    immutable runtime ledger that already carries it instead of the newer key.
+    """
+    has_claims = bool(fc_maps) or bool(osrc_fetched)
+    if not has_claims:
+        return
+    rec = data.get("validation_reconciliation")
+    has_rec = isinstance(rec, dict) and len(rec) > 0
+    legacy = evidence.get(LEGACY_RECONCILIATION_KEY)
+    has_legacy = isinstance(legacy, list) and len(legacy) > 0
+    if has_rec or has_legacy:
+        return
+    problems.append(
+        "validation_reconciliation: required and non-empty when "
+        "firecrawl.required_maps_present or opensrc.fetched is non-empty "
+        f"(legacy validation_evidence.{LEGACY_RECONCILIATION_KEY} list also accepted)"
+    )
+
+
+def _check_reconciliation_shape(data: dict[str, Any], problems: list[str]) -> None:
+    rec = data.get("validation_reconciliation")
+    if rec is None:
+        return
+    rec = _as_dict(rec, "validation_reconciliation", problems)
+    if not rec:
+        problems.append("validation_reconciliation: must be non-empty")
+        return
+    if rec.get("final_state") not in RECONCILIATION_FINAL_STATES:
+        problems.append("validation_reconciliation.final_state: invalid or missing")
+    buckets = {k: _as_list(rec.get(k), f"validation_reconciliation.{k}", problems) for k in ("conflicts", "resolutions")}
+    if buckets["resolutions"] != buckets["conflicts"]:
+        problems.append("validation_reconciliation.resolutions: must preserve conflicts ordering")
+    for bucket, items in buckets.items():
+        for idx, item in enumerate(items):
+            item = _as_dict(item, f"validation_reconciliation.{bucket}[{idx}]", problems)
+            missing = RECONCILIATION_CONFLICT_FIELDS - set(item)
+            if missing:
+                problems.append(f"validation_reconciliation.{bucket}[{idx}]: missing {sorted(missing)}")
 
 
 def validate(path: Path) -> list[str]:
@@ -318,6 +379,9 @@ def validate(path: Path) -> list[str]:
                 problems.append(
                     f"opensrc.fetched[{repo}]: key_paths must be a non-empty list"
                 )
+
+    _check_reconciliation_required(data, evidence, fc_maps, osrc_fetched, problems)
+    _check_reconciliation_shape(data, problems)
 
     contract = _as_dict(
         data.get("coding_agent_execution_contract"),

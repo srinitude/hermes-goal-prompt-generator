@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from goal_prompt_generator import build_optimized_markdown, prepare_goal_prompt, validate_optimized_markdown
+from goal_prompt_generator import VERSION, build_optimized_markdown, prepare_goal_prompt, validate_optimized_markdown
 
 CLEANUP_REQUIREMENT = "At the end of the goal execution, perform a ruthless cleanup pass over the final diff. Remove every code change, file change, configuration change, dependency change, test change, documentation change, or generated artifact that is unrelated, incidental, speculative, exploratory, redundant, or extraneous to the successful completion of the approved goal. The final submitted change set must contain only the minimum necessary changes required to satisfy the goal and its validation criteria. If the goal is executed within a brownfield codebase, preserve the repository’s existing intent, architecture, conventions, abstractions, naming patterns, style, behavior, public contracts, tests, workflows, and integration assumptions unless the approved goal explicitly requires changing them. Before marking the goal complete, verify that the final change set does not introduce regressions, does not conflict with the surrounding repository context, does not degrade existing behavior, and does not leave behind temporary implementation scaffolding, abandoned experiments, dead code, unused dependencies, unused exports, debug logs, placeholder logic, TODOs, mocks, stubs, or broad refactors that are not required by the goal. If a change was made during execution but is not necessary for the final validated solution, revert it before completion."
 PRINCIPLE_MARKERS = [
@@ -21,6 +21,14 @@ PRINCIPLE_MARKERS = [
     "Engineer software as explicit, typed, observable, cancellable, resource-safe workflows",
 ]
 BUILTIN_SRC = Path(os.environ.get("GOAL_PROMPT_GENERATOR_BUILTIN_SRC", "/Users/kiren/.hermes/skills/software-development/goal-prompt-generator/src"))
+
+
+@pytest.fixture(autouse=True)
+def _isolated_home(tmp_path, monkeypatch):
+    """Force every test to read/write artifacts under a per-test HOME so
+    the default ~/.hermes/goal-prompts/ output dir resolves into tmp_path
+    rather than the user's real Hermes directory."""
+    monkeypatch.setenv("HOME", str(tmp_path))
 
 
 def builtin_markdown(prompt: str, now: datetime) -> str:
@@ -47,10 +55,12 @@ print(json.dumps(build_optimized_markdown(sys.argv[1], datetime.fromisoformat(sy
 
 
 def test_generate_software_goal_file_has_required_contract(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.chdir(tmp_path)
+    expected_dir = tmp_path / ".hermes" / "goal-prompts"
     prepared = prepare_goal_prompt("Build a Next.js design system with tests")
 
-    assert prepared.file_path.parent == tmp_path
+    assert prepared.file_path.parent == expected_dir
     assert prepared.file_path.name == "nextjs-design-system-tests-goal.md"
     assert prepared.file_path.exists()
     assert prepared.source_prompt_hash
@@ -59,7 +69,7 @@ def test_generate_software_goal_file_has_required_contract(tmp_path, monkeypatch
     text = prepared.file_path.read_text()
     assert text == prepared.goal_text
     assert text.startswith("---\ngenerated_by: goal-prompt-generator")
-    assert 'goal_prompt_generator_version: "1.3.0"' in text
+    assert f'goal_prompt_generator_version: "{VERSION}"' in text
     assert "optimized_for: hermes-agent-goal" in text
     assert "optimization_status: optimized" in text
     assert "## Non-Execution Guardrail" in text
@@ -142,7 +152,7 @@ def test_existing_valid_generated_file_is_reused(tmp_path, monkeypatch):
     assert second.file_path == first.file_path
     assert second.goal_text == first.goal_text
     assert second.title == first.title
-    assert len(list(tmp_path.glob("*.md"))) == 1
+    assert len(list(first.file_path.parent.glob("*.md"))) == 1
 
 
 def test_invalid_generated_file_is_regenerated(tmp_path, monkeypatch):
@@ -157,7 +167,7 @@ def test_invalid_generated_file_is_regenerated(tmp_path, monkeypatch):
     assert prepared.file_path.exists()
     assert "## Acceptance Criteria" in prepared.goal_text
 
-    incomplete = prepared.goal_text.replace('goal_prompt_generator_version: "1.3.0"\n', "")
+    incomplete = prepared.goal_text.replace(f'goal_prompt_generator_version: "{VERSION}"\n', "")
     validation = validate_optimized_markdown(incomplete)
     assert not validation.valid
     assert any("goal_prompt_generator_version" in reason for reason in validation.reasons)
@@ -235,6 +245,24 @@ def test_validator_rejects_markdown_with_dropped_claude_flag():
 
     assert validation.valid is False
     assert "required claude CLI flag missing: --worktree" in validation.reasons
+
+
+def test_validator_accepts_legacy_generator_version_but_rejects_arbitrary():
+    """Already-generated goal contracts at VERSION 1.3.0 must still validate
+    under the 1.4.0 validator so immutable Markdown on disk does not silently
+    break across release bumps; an unrelated arbitrary version still fails."""
+    text = build_optimized_markdown("Refactor a Python package with tests")
+    current_literal = f'goal_prompt_generator_version: "{VERSION}"'
+    assert current_literal in text
+
+    legacy = text.replace(current_literal, 'goal_prompt_generator_version: "1.3.0"')
+    legacy_validation = validate_optimized_markdown(legacy)
+    assert legacy_validation.valid is True, legacy_validation.reasons
+
+    bogus = text.replace(current_literal, 'goal_prompt_generator_version: "0.0.1"')
+    bogus_validation = validate_optimized_markdown(bogus)
+    assert bogus_validation.valid is False
+    assert any("goal_prompt_generator_version" in reason for reason in bogus_validation.reasons)
 
 
 def test_paired_yaml_carries_coding_agent_execution_contract(tmp_path, monkeypatch):

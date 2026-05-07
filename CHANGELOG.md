@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 - Contrarian validation + reconciliation
+
+- Adds `ContrarianValidator`, `Conflict`, and `Reconciliation` for falsification-first rechecks of Firecrawl, opensrc, principle coverage, phase topology, hard gates, helper paths, and coding-agent execution contracts.
+- Emits `validation_reconciliation` into generated task-list YAMLs and validates the reconciliation block shape.
+- Adds standalone `scripts/run_contrarian_validation.py` plus source-claim verifier probes.
+
 ## 1.3.0 - Coding Agent Execution Contract + paired TDD task list YAML
 
 - Adds a mandatory `## Coding Agent Execution Contract` section to every generated Markdown goal prompt. The section pins the implementation pathway: every code/test/config/doc change made while executing the goal must originate from a `claude` CLI invocation that carries the full required flag set (`--p`, `--add-dir`, `--agent`, `--allow-dangerously-skip-permissions`, `--dangerously-skip-permissions`, `--debug-file`, `--effort max`, `--include-hook-events`, `--output-format stream-json`, `--include-partial-messages`, `--input-format stream-json`, `--json-schema`, `--settings`, `--strict-mcp-config`, `--system-prompt-file`, `--tools`, `--verbose`, `--worktree`).

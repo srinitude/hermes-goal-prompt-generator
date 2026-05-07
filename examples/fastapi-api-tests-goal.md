@@ -1,6 +1,6 @@
 ---
 generated_by: goal-prompt-generator
-goal_prompt_generator_version: "1.3.0"
+goal_prompt_generator_version: "1.4.0"
 optimized_for: hermes-agent-goal
 optimization_status: optimized
 source_prompt_hash: "dc30a04b515cecf114e140aef47eddc08b5b48012bb27f56523152ab8641bbf7"

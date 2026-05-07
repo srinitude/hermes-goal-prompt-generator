@@ -1,6 +1,21 @@
 from __future__ import annotations
 
-VERSION = "1.3.0"
+from pathlib import Path
+
+VERSION = "1.4.0"
+
+# All artifacts produced by goal-prompt-generator land here unless the caller
+# passes an explicit --dir / execution_dir override. The directory is created
+# on demand. Resolved at call-time via Path.expanduser() so HOME overrides in
+# tests still work.
+DEFAULT_OUTPUT_DIR = Path("~/.hermes/goal-prompts")
+
+
+def default_output_dir() -> Path:
+    """Return the absolute default output directory, creating it if missing."""
+    path = DEFAULT_OUTPUT_DIR.expanduser().resolve()
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 AUTONOMY = (
     "Ensure that you can operate everything autonomously without human intervention or a human in the loop, "
@@ -135,7 +150,8 @@ SOFTWARE_TERMS = set(
     "code coding test tests deploy refactor debug api cli sdk plugin package backend frontend database "
     "schema automation infrastructure ci cd github git docker railway vercel aws bun node typescript swift "
     "python mastra nextjs next.js react effect openrouter fal stripe auth repository source commit pr issue "
-    "runtime app application workflow integration model fastapi".split()
+    "runtime app application workflow integration model fastapi hermes daytona devcontainer codespace mcp "
+    "cron gateway skills providers profiles config configuration toolsets".split()
 )
 
 DOMAIN_TERMS = {
