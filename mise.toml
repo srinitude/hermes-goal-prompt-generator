@@ -1,0 +1,23 @@
+[tools]
+python = "3.11"
+uv = "latest"
+
+[tasks.setup]
+description = "Install local development dependencies"
+run = "uv sync --extra dev"
+
+[tasks.test]
+description = "Run standalone package tests"
+run = "uv run pytest -q"
+
+[tasks.validate-skill]
+description = "Validate Hermes skill packaging"
+run = "uv run python scripts/validate_skill.py"
+
+[tasks.smoke]
+description = "Generate a sample optimized goal without executing it"
+run = "uv run goal-prompt-generator --json 'Build a FastAPI API with tests'"
+
+[tasks.quality]
+description = "Run all repository checks"
+depends = ["test", "validate-skill"]

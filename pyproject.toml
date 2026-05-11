@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "goal-prompt-generator"
+version = "0.1.0"
+description = "Hermes Agent skill and CLI for isolated optimized goal prompt Markdown files."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Kiren Srinivasan" }]
+keywords = ["hermes-agent", "skills", "goal", "prompt-engineering", "tdd"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = ["PyYAML>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/srinitude/hermes-goal-prompt-generator"
+Repository = "https://github.com/srinitude/hermes-goal-prompt-generator"
+Issues = "https://github.com/srinitude/hermes-goal-prompt-generator/issues"
+
+[project.scripts]
+goal-prompt-generator = "goal_prompt_generator.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/goal_prompt_generator"]
