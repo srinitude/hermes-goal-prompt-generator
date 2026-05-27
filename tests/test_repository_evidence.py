@@ -17,6 +17,8 @@ from goal_prompt_generator import (
 )
 from goal_prompt_generator.constants import VERSION
 
+SKILL_ROOT = Path(__file__).resolve().parents[1] / "skills" / "goal-prompt-generator"
+
 
 def subprocess_env_with_current_path() -> dict[str, str]:
     env = os.environ.copy()
@@ -179,8 +181,7 @@ def test_repository_validator_rejects_yaml_with_missing_key_paths(
     data["validation_evidence"]["repository_context"]["key_paths"] = []
     yaml_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
-    root = Path(__file__).resolve().parents[1]
-    validator = root / "scripts" / "validate_task_list_yaml.py"
+    validator = SKILL_ROOT / "scripts" / "validate_task_list_yaml.py"
     result = subprocess.run(
         [sys.executable, str(validator), str(yaml_path)],
         capture_output=True, text=True,

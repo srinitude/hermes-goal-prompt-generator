@@ -12,7 +12,7 @@ run = "uv run pytest -q"
 
 [tasks.validate-skill]
 description = "Validate Hermes skill packaging"
-run = "uv run python scripts/validate_skill.py"
+run = "uv run python skills/goal-prompt-generator/scripts/validate_skill.py"
 
 [tasks.smoke]
 description = "Generate a sample optimized goal without executing it"

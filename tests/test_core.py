@@ -22,6 +22,7 @@ PRINCIPLE_MARKERS = [
     "Engineer software as explicit, typed, observable, cancellable, resource-safe workflows",
 ]
 BUILTIN_SRC = Path(os.environ.get("GOAL_PROMPT_GENERATOR_BUILTIN_SRC", "/Users/kiren/.hermes/skills/software-development/goal-prompt-generator/src"))
+SKILL_ROOT = Path(__file__).resolve().parents[1] / "skills" / "goal-prompt-generator"
 
 
 def subprocess_env_with_current_path() -> dict[str, str]:
@@ -392,8 +393,7 @@ def test_yaml_validator_rejects_legacy_prerequisites_and_blocking_tasks(tmp_path
     first_task["blocking_tasks"] = ["B01"]
     yaml_path.write_text(_yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
-    root = Path(__file__).resolve().parents[1]
-    validator = root / "scripts" / "validate_task_list_yaml.py"
+    validator = SKILL_ROOT / "scripts" / "validate_task_list_yaml.py"
     result = subprocess.run(
         [sys.executable, str(validator), str(yaml_path)],
         capture_output=True, text=True,
@@ -428,8 +428,7 @@ def test_yaml_validator_rejects_missing_goal_manager_runtime_contract(tmp_path, 
     data["agent_runtime_protocol"].pop("goal_manager_continuation_contract", None)
     yaml_path.write_text(_yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
-    root = Path(__file__).resolve().parents[1]
-    validator = root / "scripts" / "validate_task_list_yaml.py"
+    validator = SKILL_ROOT / "scripts" / "validate_task_list_yaml.py"
     result = subprocess.run(
         [sys.executable, str(validator), str(yaml_path)],
         capture_output=True, text=True,
@@ -452,8 +451,7 @@ def test_yaml_validator_rejects_missing_claude_positional_prompt(tmp_path, monke
     )
     yaml_path.write_text(_yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
-    root = Path(__file__).resolve().parents[1]
-    validator = root / "scripts" / "validate_task_list_yaml.py"
+    validator = SKILL_ROOT / "scripts" / "validate_task_list_yaml.py"
     result = subprocess.run(
         [sys.executable, str(validator), str(yaml_path)],
         capture_output=True, text=True,
@@ -474,8 +472,7 @@ def test_yaml_validator_rejects_contract_missing_worktree_directory(tmp_path, mo
     data["coding_agent_execution_contract"].pop("worktree_directory", None)
     yaml_path.write_text(_yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
-    root = Path(__file__).resolve().parents[1]
-    validator = root / "scripts" / "validate_task_list_yaml.py"
+    validator = SKILL_ROOT / "scripts" / "validate_task_list_yaml.py"
     result = subprocess.run(
         [sys.executable, str(validator), str(yaml_path)],
         capture_output=True, text=True,
@@ -496,8 +493,7 @@ def test_yaml_validator_rejects_yaml_missing_contract(tmp_path, monkeypatch):
     data.pop("coding_agent_execution_contract", None)
     yaml_path.write_text(_yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
-    root = Path(__file__).resolve().parents[1]
-    validator = root / "scripts" / "validate_task_list_yaml.py"
+    validator = SKILL_ROOT / "scripts" / "validate_task_list_yaml.py"
     result = subprocess.run(
         [sys.executable, str(validator), str(yaml_path)],
         capture_output=True, text=True,

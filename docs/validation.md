@@ -10,8 +10,8 @@ Direct commands:
 
 ```bash
 uv run pytest -q
-uv run python scripts/validate_skill.py
-python scripts/generate_goal_prompt.py --json "Build a FastAPI API with tests"
+uv run python skills/goal-prompt-generator/scripts/validate_skill.py
+python skills/goal-prompt-generator/scripts/generate_goal_prompt.py --json "Build a FastAPI API with tests"
 ```
 
 Expected behavior:

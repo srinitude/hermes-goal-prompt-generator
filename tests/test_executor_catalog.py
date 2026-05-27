@@ -10,8 +10,9 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
-SCRIPTS = ROOT / "scripts"
+SKILL_ROOT = ROOT / "skills" / "goal-prompt-generator"
+SRC = SKILL_ROOT / "src"
+SCRIPTS = SKILL_ROOT / "scripts"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 

@@ -6,7 +6,7 @@
 git clone https://github.com/srinitude/hermes-goal-prompt-generator.git
 cd hermes-goal-prompt-generator
 mkdir -p ~/.hermes/skills/software-development
-ln -sfn "$(pwd)" ~/.hermes/skills/software-development/goal-prompt-generator
+ln -sfn "$(pwd)/skills/goal-prompt-generator" ~/.hermes/skills/software-development/goal-prompt-generator
 hermes skills list | grep goal-prompt-generator
 ```
 

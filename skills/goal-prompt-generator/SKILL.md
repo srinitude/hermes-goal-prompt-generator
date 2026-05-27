@@ -7,8 +7,15 @@ author: Hermes Agent
 license: MIT
 metadata:
   hermes:
-    tags: [goal, prompt-optimization, isolated-generation, tdd]
-    related_skills: [hermes-agent, hermes-agent-skill-authoring, test-driven-development]
+    tags:
+      - goal
+      - prompt-optimization
+      - isolated-generation
+      - tdd
+    related_skills:
+      - hermes-agent
+      - hermes-agent-skill-authoring
+      - test-driven-development
 ---
 
 # Goal Prompt Generator

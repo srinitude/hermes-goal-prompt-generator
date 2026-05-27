@@ -1,5 +1,6 @@
 # goal-prompt-generator
 
+[![skills.sh](https://skills.sh/b/srinitude/hermes-goal-prompt-generator)](https://skills.sh/s/srinitude/hermes-goal-prompt-generator)
 [![Quality](https://github.com/srinitude/hermes-goal-prompt-generator/actions/workflows/quality.yml/badge.svg)](https://github.com/srinitude/hermes-goal-prompt-generator/actions/workflows/quality.yml)
 [![Release](https://img.shields.io/github/v/release/srinitude/hermes-goal-prompt-generator?include_prereleases&sort=semver)](https://github.com/srinitude/hermes-goal-prompt-generator/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -14,11 +15,11 @@ It is intentionally **not** a Hermes `/goal` preflight hook, slash-command inter
 
 ## What you get
 
-- A complete Hermes Agent skill at repository root: [`SKILL.md`](SKILL.md).
-- Linked skill references, templates, and scripts in [`references/`](references), [`templates/`](templates), and [`scripts/`](scripts) — including playbooks for the **12-executor coding-agent catalog**, **fallback alternatives for Firecrawl/opensrc/Claude Code when they are unavailable**, cross-platform port goals, third-party OSS PR goals, paradox-resolving goals, real-implementation goals, per-provider parity goals, skill-authoring goals, retargeting an existing goal's runtime, contrarian validation, repository-context exploration, the Claude CLI execution syntax, the Firecrawl 1.16 CLI quirks, and the standalone-repo release packaging workflow.
-- A standalone Python package in [`src/goal_prompt_generator`](src/goal_prompt_generator).
+- A complete Hermes Agent skill package in [`skills/goal-prompt-generator/`](skills/goal-prompt-generator).
+- Linked skill references, templates, and scripts in [`skills/goal-prompt-generator/references/`](skills/goal-prompt-generator/references), [`skills/goal-prompt-generator/templates/`](skills/goal-prompt-generator/templates), and [`skills/goal-prompt-generator/scripts/`](skills/goal-prompt-generator/scripts) — including playbooks for the **12-executor coding-agent catalog**, **fallback alternatives for Firecrawl/opensrc/Claude Code when they are unavailable**, cross-platform port goals, third-party OSS PR goals, paradox-resolving goals, real-implementation goals, per-provider parity goals, skill-authoring goals, retargeting an existing goal's runtime, contrarian validation, repository-context exploration, the Claude CLI execution syntax, the Firecrawl 1.16 CLI quirks, and the standalone-repo release packaging workflow.
+- A standalone Python package in [`skills/goal-prompt-generator/src/goal_prompt_generator`](skills/goal-prompt-generator/src/goal_prompt_generator).
 - A CLI command: `goal-prompt-generator` (entry point in `pyproject.toml`).
-- Standalone validator scripts in [`scripts/`](scripts):
+- Standalone validator scripts in [`skills/goal-prompt-generator/scripts/`](skills/goal-prompt-generator/scripts):
   - `validate_skill.py` — skill packaging validator.
   - `validate_task_list_yaml.py` — structural validator for the companion TDD task-list YAML (catalog-aware: enforces every executor's required-flag set).
   - `validate_source_claims.py` — deterministic pre-flight verifier for opensrc repo caches, cited file paths, host reachability, Firecrawl usability, and helper presence.
@@ -47,7 +48,7 @@ git clone https://github.com/srinitude/hermes-goal-prompt-generator.git
 cd hermes-goal-prompt-generator
 
 mkdir -p ~/.hermes/skills/software-development
-ln -sfn "$(pwd)" ~/.hermes/skills/software-development/goal-prompt-generator
+ln -sfn "$(pwd)/skills/goal-prompt-generator" ~/.hermes/skills/software-development/goal-prompt-generator
 
 hermes skills list | grep goal-prompt-generator
 ```
@@ -88,7 +89,7 @@ uv run --with-editable . goal-prompt-generator --json "Build a FastAPI API with 
 Using the repository script without installing the package:
 
 ```bash
-python scripts/generate_goal_prompt.py --json "Build a FastAPI API with tests"
+python skills/goal-prompt-generator/scripts/generate_goal_prompt.py --json "Build a FastAPI API with tests"
 ```
 
 ### Pick the coding-agent CLI (executor)
@@ -97,20 +98,20 @@ The generated contract pins which coding-agent CLI executes the work. By default
 
 ```bash
 # Use the default (Claude Code) — same as omitting --executor
-python scripts/generate_goal_prompt.py --json "Build a FastAPI API with tests"
+python skills/goal-prompt-generator/scripts/generate_goal_prompt.py --json "Build a FastAPI API with tests"
 
 # Target OpenAI Codex
-python scripts/generate_goal_prompt.py --executor codex --json "..."
+python skills/goal-prompt-generator/scripts/generate_goal_prompt.py --executor codex --json "..."
 
 # Target Hermes Agent itself with a configurable model + reasoning effort
-python scripts/generate_goal_prompt.py --executor hermes --json "..."
+python skills/goal-prompt-generator/scripts/generate_goal_prompt.py --executor hermes --json "..."
 
 # Or set the environment variable
 export GOAL_PROMPT_GENERATOR_EXECUTOR=opencode
-python scripts/generate_goal_prompt.py --json "..."
+python skills/goal-prompt-generator/scripts/generate_goal_prompt.py --json "..."
 ```
 
-The full 12-entry catalog: `claude`, `codex`, `opencode`, `gemini`, `cursor`, `aider`, `pi`, `qwen`, `goose`, `amp`, `crush`, `hermes`. See [`references/executor-fallbacks-and-model-selection.md`](references/executor-fallbacks-and-model-selection.md) for the per-executor required-flag set and the Hermes-as-executor model-selection rule.
+The full 12-entry catalog: `claude`, `codex`, `opencode`, `gemini`, `cursor`, `aider`, `pi`, `qwen`, `goose`, `amp`, `crush`, `hermes`. See [`skills/goal-prompt-generator/references/executor-fallbacks-and-model-selection.md`](skills/goal-prompt-generator/references/executor-fallbacks-and-model-selection.md) for the per-executor required-flag set and the Hermes-as-executor model-selection rule.
 
 ### Output
 
@@ -189,7 +190,7 @@ Switching executors **never** weakens the GoalManager continuation contract. Eve
 
 The skill's contract requires Firecrawl maps + scrapes and `opensrc` source-grounded validation when the goal references real technologies. When those tools are unavailable on your machine, the skill degrades **honestly** — the YAML's `validation_evidence` records the requirement as an execution-time validation requirement instead of falsely claiming the tool was used.
 
-See [`references/tool-fallback-alternatives.md`](references/tool-fallback-alternatives.md) for the full matrix:
+See [`skills/goal-prompt-generator/references/tool-fallback-alternatives.md`](skills/goal-prompt-generator/references/tool-fallback-alternatives.md) for the full matrix:
 
 | Mode | What the skill does |
 | --- | --- |
@@ -253,9 +254,9 @@ Equivalent direct commands:
 
 ```bash
 uv run pytest -q                                       # 91 tests pass
-uv run python scripts/validate_skill.py                # skill packaging validator
-python scripts/generate_goal_prompt.py --json "..."    # end-to-end smoke
-python scripts/validate_task_list_yaml.py <yaml-path>  # structural YAML validator
+uv run python skills/goal-prompt-generator/scripts/validate_skill.py                # skill packaging validator
+python skills/goal-prompt-generator/scripts/generate_goal_prompt.py --json "..."    # end-to-end smoke
+python skills/goal-prompt-generator/scripts/validate_task_list_yaml.py <yaml-path>  # structural YAML validator
 ```
 
 ---
@@ -264,7 +265,6 @@ python scripts/validate_task_list_yaml.py <yaml-path>  # structural YAML validat
 
 ```text
 .
-├── SKILL.md
 ├── README.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -273,10 +273,13 @@ python scripts/validate_task_list_yaml.py <yaml-path>  # structural YAML validat
 ├── MANIFEST.md
 ├── pyproject.toml
 ├── mise.toml
-├── references/         # playbooks, contracts, pitfalls archive, executor catalog, tool fallbacks
-├── templates/          # optimized-goal-template.md
-├── scripts/            # CLI scripts + validators + probes
-├── src/goal_prompt_generator/    # executors.py, repository.py, tasklist.py, validation.py, …
+├── skills/
+│   └── goal-prompt-generator/
+│       ├── SKILL.md
+│       ├── references/         # playbooks, contracts, pitfalls archive, executor catalog, tool fallbacks
+│       ├── templates/          # optimized-goal-template.md
+│       ├── scripts/            # CLI scripts + validators + probes
+│       └── src/goal_prompt_generator/    # executors.py, repository.py, tasklist.py, validation.py, …
 ├── tests/              # 91 tests covering every contract surface
 ├── docs/
 ├── examples/

@@ -1,0 +1,18 @@
+{
+  "skills": [
+    {
+      "name": "goal-prompt-generator",
+      "version": "0.1.0",
+      "path": "skills/goal-prompt-generator",
+      "description": "Generate isolated optimized Markdown goal prompts plus paired TDD task-list YAML for later Hermes /goal execution.",
+      "tags": [
+        "hermes-agent",
+        "goal",
+        "prompt-optimization",
+        "tdd",
+        "firecrawl",
+        "opensrc"
+      ]
+    }
+  ]
+}

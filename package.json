@@ -1,0 +1,29 @@
+{
+  "name": "@srinitude/hermes-goal-prompt-generator",
+  "version": "0.1.0",
+  "description": "Hermes Agent skill and CLI for isolated optimized goal prompt Markdown files.",
+  "license": "MIT",
+  "author": "Kiren Srinivasan",
+  "homepage": "https://github.com/srinitude/hermes-goal-prompt-generator#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srinitude/hermes-goal-prompt-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/srinitude/hermes-goal-prompt-generator/issues"
+  },
+  "keywords": [
+    "hermes-agent",
+    "agent-skill",
+    "skills.sh",
+    "goal",
+    "prompt-engineering",
+    "tdd"
+  ],
+  "files": [
+    "skills/",
+    "skills-lock.json",
+    "LICENSE",
+    "README.md"
+  ]
+}

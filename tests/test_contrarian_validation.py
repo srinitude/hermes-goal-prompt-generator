@@ -12,7 +12,7 @@ import goal_prompt_generator.contrarian_validation as cv
 
 GATE_PHRASE = "committed and observed failing for the right reason"
 FORBIDDEN = "firecrawl" + " " + "extract"
-SKILL_ROOT = Path(__file__).resolve().parents[1]
+SKILL_ROOT = Path(__file__).resolve().parents[1] / "skills" / "goal-prompt-generator"
 RUN_SCRIPT = SKILL_ROOT / "scripts" / "run_contrarian_validation.py"
 TASK_VALIDATOR = SKILL_ROOT / "scripts" / "validate_task_list_yaml.py"
 CLAUDE_FLAGS = (

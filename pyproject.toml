@@ -35,8 +35,8 @@ goal-prompt-generator = "goal_prompt_generator.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["skills/goal-prompt-generator/src"]
 addopts = "-q"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/goal_prompt_generator"]
+packages = ["skills/goal-prompt-generator/src/goal_prompt_generator"]
